@@ -1,4 +1,2 @@
-# TechgunFX
-TechgunFX 模组
-科技枪特效[TGFX ]是一个用于提供粒子效果渲染的前置模组，其自定义粒子效果系统来自于[ TG ]科技枪（Techguns）。
-本模组的代码沿用Techguns模组的协议进行开源，本模组包含的贴图材质素材采用CC BY-NC-SA 3.0协议发布。
+# SagerFX
+SA Special Effects [SAFX] is a pre mod used to provide special effects rendering, which can generate custom particle combinations and trailing rendering methods independent of the original particles. Its custom special effects system comes from the [TG] Techguns and is now undergoing independent maintenance upgrades and high-level updates. Thank you to pWn3d1337 for their contribution to this mod. After communicating with pWn3d1337, this mod declares that it is not an official mod for TechgunsMod. The code of this mod is open sourced under the MIT license, and the texture materials included in this mod are released under the CC BY-NC-SA 3.0 license.
