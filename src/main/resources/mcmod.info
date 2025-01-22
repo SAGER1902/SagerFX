@@ -1,0 +1,16 @@
+[
+{
+  "modid": "tgfx",
+  "name": "TechgunsFX",
+  "description": "Just TechgunsFX",
+  "version": "1.12.2-1.0",
+  "mcversion": "1.12.2",
+  //"url": "https://github.com/pWn3d1337/Techguns2",
+  //"updateUrl": "https://raw.githubusercontent.com/pWn3d1337/Techguns2/master/update.json",
+  "authorList": ["SAGER, pWn3d_1337"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
