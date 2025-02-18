@@ -416,17 +416,13 @@ public class SAParticle extends Particle implements ISAParticle {
         
 		////System.out.println(String.format("p1 = %.2f, %.2f, %.2f, p2 = %.2f, %.2f, %.2f,  p3 = %.2f, %.2f, %.2f,  p4 = %.2f, %.2f, %.2f", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z, p3.x, p3.y, p3.z, p4.x, p4.y, p4.z));
 		////System.out.println(String.format("fpos = %.2f, %.2f, %.2f", fPosX, fPosY, fPosZ));
-		if(type.renderType == RenderType.ALPHA_SHADED){
-			buffer.pos(p1.x + fPosX, p1.y + fPosY, p1.z + fPosZ).tex((double)ua, (double)va).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).normal(0.0f, 1.0f, 0.0f).endVertex();
-			buffer.pos(p2.x + fPosX, p2.y + fPosY, p2.z + fPosZ).tex((double)ub, (double)vb).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).normal(0.0f, 1.0f, 0.0f).endVertex();
-			buffer.pos(p3.x + fPosX, p3.y + fPosY, p3.z + fPosZ).tex((double)uc, (double)vc).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).normal(0.0f, 1.0f, 0.0f).endVertex();
-			buffer.pos(p4.x + fPosX, p4.y + fPosY, p4.z + fPosZ).tex((double)ud, (double)vd).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).normal(0.0f, 1.0f, 0.0f).endVertex();
-		}else{
-			buffer.pos(p1.x + fPosX, p1.y + fPosY, p1.z + fPosZ).tex((double)ua, (double)va).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(0, 240).normal(0.0f, 1.0f, 0.0f).endVertex();
-			buffer.pos(p2.x + fPosX, p2.y + fPosY, p2.z + fPosZ).tex((double)ub, (double)vb).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(0, 240).normal(0.0f, 1.0f, 0.0f).endVertex();
-			buffer.pos(p3.x + fPosX, p3.y + fPosY, p3.z + fPosZ).tex((double)uc, (double)vc).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(0, 240).normal(0.0f, 1.0f, 0.0f).endVertex();
-			buffer.pos(p4.x + fPosX, p4.y + fPosY, p4.z + fPosZ).tex((double)ud, (double)vd).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(0, 240).normal(0.0f, 1.0f, 0.0f).endVertex();
-		}
+	
+		
+		buffer.pos(p1.x + fPosX, p1.y + fPosY, p1.z + fPosZ).tex((double)ua, (double)va).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(0, 240).normal(0.0f, 1.0f, 0.0f).endVertex();
+		buffer.pos(p2.x + fPosX, p2.y + fPosY, p2.z + fPosZ).tex((double)ub, (double)vb).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(0, 240).normal(0.0f, 1.0f, 0.0f).endVertex();
+		buffer.pos(p3.x + fPosX, p3.y + fPosY, p3.z + fPosZ).tex((double)uc, (double)vc).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(0, 240).normal(0.0f, 1.0f, 0.0f).endVertex();
+		buffer.pos(p4.x + fPosX, p4.y + fPosY, p4.z + fPosZ).tex((double)ud, (double)vd).color(this.particleRed, this.particleGreen, this.particleBlue, this.particleAlpha).lightmap(0, 240).normal(0.0f, 1.0f, 0.0f).endVertex();
+		
 
         Tessellator.getInstance().draw();
 
@@ -528,53 +524,37 @@ public class SAParticle extends Particle implements ISAParticle {
     }
 	
 	protected void enableBlendMode() {
-		//GlStateManager.pushAttrib();
-    	if (type.renderType != RenderType.SOLID) {
-    		GlStateManager.enableBlend();
-    		GlStateManager.depthMask(false);
-    		//GlStateManager.disableAlpha();
-    		//GL11.glEnable(GL11.GL_ALPHA_TEST);
-    	}
-		/*if (type.renderType == RenderType.ALPHA_SHADED){
-			GlStateManager.disableLighting();
-			GlStateManager.tryBlendFuncSeparate(SourceFactor.ONE, DestFactor.ONE, SourceFactor.ONE, DestFactor.ZERO);
-		}*/
-        if (type.renderType == RenderType.ALPHA||type.renderType == RenderType.ALPHA_SHADED) {
-        	GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-        } else if (type.renderType == RenderType.ADDITIVE || type.renderType==RenderType.NO_Z_TEST) {
-        	GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
-        }
-        
-        if (type.renderType==RenderType.NO_Z_TEST){
-        	GlStateManager.depthMask(false);
-        	GlStateManager.disableDepth();
-        }
-        /*if (type.renderType != RenderType.ALPHA_SHADED)*/SARenderHelper.enableFXLighting();
+		if (type.renderType != RenderType.SOLID) {
+			GlStateManager.enableBlend();
+			GlStateManager.depthMask(false);
+		}
+		if (type.renderType == RenderType.ALPHA || type.renderType == RenderType.ALPHA_SHADED) {
+			GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+		} else if (type.renderType == RenderType.ADDITIVE || type.renderType==RenderType.NO_Z_TEST) {
+			GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+		}
+		if (type.renderType==RenderType.NO_Z_TEST){
+			GlStateManager.depthMask(false);
+			GlStateManager.disableDepth();
+		}
+		SARenderHelper.enableFXLighting();
 	}
 	
 	protected void disableBlendMode() {
-		/*if (type.renderType != RenderType.ALPHA_SHADED)*/SARenderHelper.disableFXLighting();
+		SARenderHelper.disableFXLighting();
 		if (type.renderType != RenderType.SOLID) {
-    		GlStateManager.disableBlend();
-    		GlStateManager.depthMask(true);
-    		//GlStateManager.disableAlpha();
-    		//GL11.glDisable(GL11.GL_ALPHA_TEST);
-    	}
-		/*if (type.renderType == RenderType.ALPHA_SHADED){
-			GlStateManager.enableLighting();
-			GlStateManager.tryBlendFuncSeparate(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA, SourceFactor.ONE,DestFactor.ZERO);
-		}*/
-		 if (type.renderType == RenderType.ALPHA||type.renderType == RenderType.ALPHA_SHADED) {
-        	GlStateManager.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-        } else if (type.renderType == RenderType.ADDITIVE || type.renderType==RenderType.NO_Z_TEST) {
-        	GlStateManager.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-        }
-		
-        if (type.renderType==RenderType.NO_Z_TEST){
-        	GlStateManager.depthMask(true);
-        	GlStateManager.enableDepth();
-        }
-		//GlStateManager.popAttrib();
+			GlStateManager.disableBlend();
+			GlStateManager.depthMask(true);
+		}
+		if (type.renderType == RenderType.ALPHA || type.renderType == RenderType.ALPHA_SHADED) {
+			GlStateManager.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+		} else if (type.renderType == RenderType.ADDITIVE || type.renderType==RenderType.NO_Z_TEST) {
+			GlStateManager.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+		}
+		if (type.renderType==RenderType.NO_Z_TEST){
+			GlStateManager.depthMask(true);
+			GlStateManager.enableDepth();
+		}
 	}
     
     
