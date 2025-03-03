@@ -17,7 +17,6 @@ import safx.util.EntityCondition;
 import safx.util.MathUtil;
 import safx.util.Vec3dr;
 
-import wmlib.common.living.EntityWMVehicleBase;
 /**
  * A particle system which spawns particles
  */
@@ -125,10 +124,6 @@ public class SAParticleSystem extends Particle implements ISAParticle {
 				this.rotationYaw=elb.rotationYawHead;
 				Vec3dr offsetr = type.offsetr;
 				if (this.entityOffset != null) offsetr = offsetr.add1(this.entityOffset);
-				if(entity instanceof EntityWMVehicleBase){
-					EntityWMVehicleBase plane = (EntityWMVehicleBase)entity;
-					offsetr = offsetr.rotateRote((float) ((-plane.throte)*MathUtil.D2R));	
-				}
 				offsetr = offsetr.rotatePitch((float) (-elb.rotationPitch*MathUtil.D2R));
 				offsetr = offsetr.rotateYaw((float) ((-elb.rotationYawHead)*MathUtil.D2R));		
 				
