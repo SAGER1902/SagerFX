@@ -26,9 +26,10 @@ public class SagerFX
 {
 	public static final String MODID = "safx";
 	public static CommonProxy proxy = DistExecutor.safeRunForDist(() -> ClientProxy::new, () -> CommonProxy::new);
-    public SagerFX(FMLJavaModLoadingContext context){
+    public SagerFX(/*FMLJavaModLoadingContext context*/){
 		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, FXConfig.SPEC);
-        IEventBus modEventBus = context.getModEventBus();
+		IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        //IEventBus modEventBus = context.getModEventBus();
 		IEventBus forgeBus = MinecraftForge.EVENT_BUS;
         MinecraftForge.EVENT_BUS.register(this);
 		modEventBus.addListener(this::onCommonSetup);
