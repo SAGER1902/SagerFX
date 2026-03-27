@@ -4,24 +4,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.resources.ResourceLocation;
-//import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.level.Level;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.Hand;
+import net.minecraft.util.ResourceLocation;
+//import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.World;
 import safx.client.render.SARenderHelper;
-import safx.client.render.SARenderHelper.RenderTypeSA;
+import safx.client.render.SARenderHelper.RenderType;
 import safx.util.MathUtil;
-import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.world.ClientWorld;
 
 import wmlib.util.Vec3dr;
 /**
  * the parameters for a particle system and its particles are specified in its type
  */
 public class SAParticleSystemType extends SAFXType{
-	SARenderHelper.RenderTypeSA renderType = RenderTypeSA.SOLID; //Type of Transparency
-	ResourceLocation texture = ResourceLocation.tryParse("safx:textures/fx/fireball.png"); //Particle Texture
+	SARenderHelper.RenderType renderType = RenderType.SOLID; //Type of Transparency
+	ResourceLocation texture = new ResourceLocation("safx:textures/fx/fireball.png"); //Particle Texture
 	int rows = 1; //number of rows in the animated texture (1 for no animation)
 	int columns = 1; //number of columns in the animated texture (1 for no animation)
 	int frames = 1; //number of animated frames (1 for no animation)
@@ -80,7 +80,7 @@ public class SAParticleSystemType extends SAFXType{
 	float systemVelocityFactorMin = 0.0f; //How much of the system's velocity is added to the particle's velocity
 	float systemVelocityFactorMax = 0.0f;
 	
-	Vec3 offset = new Vec3(0.0, 0.0, 0.0); //TODO! Particles are spawned at this offset
+	Vector3d offset = new Vector3d(0.0, 0.0, 0.0); //TODO! Particles are spawned at this offset
 	Vec3dr offsetr = new Vec3dr(0.0, 0.0, 0.0); //TODO! Particles are spawned at this offset
 	
 	IVolumeType volumeType = VOL_POINT;
@@ -131,29 +131,29 @@ public class SAParticleSystemType extends SAFXType{
 	
 	public static IVelocityType VEL_NONE = new IVelocityType(){
 		@Override
-		public Vec3 getVelocity(SAParticleSystem sys, float... params) {
-			return new Vec3(0,0,0);
+		public Vector3d getVelocity(SAParticleSystem sys, float... params) {
+			return new Vector3d(0,0,0);
 		}		
 	};
 	
 	public static IVelocityType VEL_ORTHO = new IVelocityType(){
 		@Override
-		public Vec3 getVelocity(SAParticleSystem sys, float... params) {
+		public Vector3d getVelocity(SAParticleSystem sys, float... params) {
 			Random rand = new Random();
 			if (sys.type.velocityDataMin.length >= 3) {
 				float x = MathUtil.randomFloat(rand, sys.type.velocityDataMin[0], sys.type.velocityDataMax[0]);
 				float y = MathUtil.randomFloat(rand, sys.type.velocityDataMin[1], sys.type.velocityDataMax[1]);
 				float z = MathUtil.randomFloat(rand, sys.type.velocityDataMin[2], sys.type.velocityDataMax[2]);
 				
-				return new Vec3(x,y,z);				
+				return new Vector3d(x,y,z);				
 			}
-			return new Vec3(0,0,0);
+			return new Vector3d(0,0,0);
 		}		
 	};
 	
 	public static IVelocityType VEL_OUTWARD = new IVelocityType(){
 		@Override
-		public Vec3 getVelocity(SAParticleSystem sys, float... params) {
+		public Vector3d getVelocity(SAParticleSystem sys, float... params) {
 			Random rand = new Random();
 			if (sys.type.velocityDataMin.length >= 2) {
 				float r = MathUtil.randomFloat(rand, sys.type.velocityDataMin[0], sys.type.velocityDataMax[0]);
@@ -162,67 +162,67 @@ public class SAParticleSystemType extends SAFXType{
 				if (params.length == 1 ){ //Cylinder (yaw angle)
 					double angle = -params[0];
 					//System.out.printf("Outward, angle=%.3f\n",params[0]);
-					return new Vec3( r*Math.cos(angle),  y, r*Math.sin(angle));
+					return new Vector3d( r*Math.cos(angle),  y, r*Math.sin(angle));
 				}else if (params.length == 3) { //Sphere or Hemisphere
-					return new Vec3( params[0]*r, params[1]*r, params[2]*r);
+					return new Vector3d( params[0]*r, params[1]*r, params[2]*r);
 				}else  { //e.g. POINT
 					double angle = rand.nextDouble()*2.0*Math.PI;
-					return new Vec3( r*Math.cos(angle), y, r*Math.sin(angle));
+					return new Vector3d( r*Math.cos(angle), y, r*Math.sin(angle));
 				}
 			}
-			return new Vec3(0,0,0);
+			return new Vector3d(0,0,0);
 		}		
 	};
 	
 	public static IVelocityType VEL_SPHERICAL = new IVelocityType(){
 		@Override
-		public Vec3 getVelocity(SAParticleSystem sys, float... params) {
+		public Vector3d getVelocity(SAParticleSystem sys, float... params) {
 			Random rand = new Random();
 			if (sys.type.velocityDataMin.length >= 1) {
 				float r = MathUtil.randomFloat(rand, sys.type.velocityDataMin[0], sys.type.velocityDataMax[0]);
 
 //				if (dir.x != 0 || dir.y != 0 || dir.z != 0) {
-//					return new Vec3(dir.x*r,  dir.y*r, dir.z*r);
+//					return new Vector3d(dir.x*r,  dir.y*r, dir.z*r);
 //				}else {
 					double angle = rand.nextDouble()*2.0*Math.PI;
 					double y = 1.0-(rand.nextDouble()*2.0);
 					double a = Math.sqrt(1.0-Math.pow(y, 2));
-					return new Vec3(r*a*Math.cos(angle), r*y, r*a*Math.sin(angle));
+					return new Vector3d(r*a*Math.cos(angle), r*y, r*a*Math.sin(angle));
 	//			}
 		
 			}
-			return new Vec3(0,0,0);
+			return new Vector3d(0,0,0);
 		}		
 	};
 	
 	public static IVelocityType VEL_HEMISPHERICAL = new IVelocityType(){
 		@Override
-		public Vec3 getVelocity(SAParticleSystem sys, float...params) {
+		public Vector3d getVelocity(SAParticleSystem sys, float...params) {
 			Random rand = new Random();
 			if (sys.type.velocityDataMin.length >= 1) {
 				float r = MathUtil.randomFloat(rand, sys.type.velocityDataMin[0], sys.type.velocityDataMax[0]);
 
 //				if (dir.x != 0 || dir.y != 0 || dir.z != 0) {
 //					
-//					return new Vec3(dir.x*r, dir.y*r, dir.z*r);
+//					return new Vector3d(dir.x*r, dir.y*r, dir.z*r);
 //				}else {
 					double angle = rand.nextDouble()*2.0*Math.PI;
 					double y = rand.nextDouble();
 					double a = Math.sqrt(1.0-Math.pow(y, 2));
 					
-					return new Vec3(r*a*Math.cos(angle), r*a*Math.sin(angle), r*y);
+					return new Vector3d(r*a*Math.cos(angle), r*a*Math.sin(angle), r*y);
 //				}
 		
 			}
-			return new Vec3(0,0,0);
+			return new Vector3d(0,0,0);
 		}		
 	};
 	
 	public static IVolumeType VOL_POINT = new IVolumeType() {
 
 		@Override
-		public Vec3 getPosition(SAParticleSystem sys, DirResult dir, int i, int count) {
-			return new Vec3(0,0,0);
+		public Vector3d getPosition(SAParticleSystem sys, DirResult dir, int i, int count) {
+			return new Vector3d(0,0,0);
 		}
 		
 	};
@@ -230,7 +230,7 @@ public class SAParticleSystemType extends SAFXType{
 	
 	public static IVolumeType VOL_CYLINDER = new IVolumeType() {
 		@Override
-		public Vec3 getPosition(SAParticleSystem sys, DirResult dir, int i, int count) {
+		public Vector3d getPosition(SAParticleSystem sys, DirResult dir, int i, int count) {
 			Random rand = new Random();
 			if (sys.type.volumeData.length >= 2) {
 				float r;
@@ -243,23 +243,23 @@ public class SAParticleSystemType extends SAFXType{
 				}
 				y = rand.nextFloat()*sys.type.volumeData[1];
 				
-				Vec3 direction = new Vec3(1.0, 0.0, 0.0).yRot(angle);
+				Vector3d direction = new Vector3d(1.0, 0.0, 0.0).yRot(angle);
 				//System.out.printf("angle=%.3f,  direction = %.3f / %.3f / %.3f\n", angle, direction.x, direction.y, direction.z);
 				//dir.setValues((float)direction.x, (float)direction.y, (float)direction.z);
 				dir.setValues(angle);
 				
-				Vec3 position = new Vec3(direction.x*r, y, direction.z*r);
+				Vector3d position = new Vector3d(direction.x*r, y, direction.z*r);
 				return position;
 			}else {
 				//fail;
-				return new Vec3(0,0,0);
+				return new Vector3d(0,0,0);
 			}	
 		}		
 	};
 	
 	public static IVolumeType VOL_CYLINDER2 = new IVolumeType() { //Tilted cylinder
 		@Override
-		public Vec3 getPosition(SAParticleSystem sys, DirResult dir, int i, int count) {
+		public Vector3d getPosition(SAParticleSystem sys, DirResult dir, int i, int count) {
 			Random rand = new Random();
 			if (sys.type.volumeData.length >= 2) {
 				float r;
@@ -272,19 +272,19 @@ public class SAParticleSystemType extends SAFXType{
 				}
 				z = rand.nextFloat()*sys.type.volumeData[1];
 				
-				Vec3 direction = new Vec3(0.0, 1.0, 0.0).xRot(angle); //.rotateYaw((float)(Math.PI*0.5d));
+				Vector3d direction = new Vector3d(0.0, 1.0, 0.0).xRot(angle); //.rotateYaw((float)(Math.PI*0.5d));
 				dir.setValues((float)direction.x, (float)direction.y, (float)direction.z);
-				return new Vec3(direction.x*r, direction.y*r, z);
+				return new Vector3d(direction.x*r, direction.y*r, z);
 			}else {
 				//fail;
-				return new Vec3(0,0,0);
+				return new Vector3d(0,0,0);
 			}	
 		}		
 	};
 	
 	public static IVolumeType VOL_SPHERE = new IVolumeType() {
 		@Override
-		public Vec3 getPosition(SAParticleSystem sys, DirResult dir, int i, int count) {
+		public Vector3d getPosition(SAParticleSystem sys, DirResult dir, int i, int count) {
 			Random rand = new Random();
 			if (sys.type.volumeData.length >= 1) {
 				float r;
@@ -298,20 +298,20 @@ public class SAParticleSystemType extends SAFXType{
 					r = MathUtil.randomFloat(rand, 0.0f, sys.type.volumeData[0]);
 				}
 
-				Vec3 direction = new Vec3(a*Math.cos(angle),  y, a*Math.sin(angle));
+				Vector3d direction = new Vector3d(a*Math.cos(angle),  y, a*Math.sin(angle));
 				dir.setValues((float)direction.x, (float)direction.y, (float)direction.z);
 				
-				return new Vec3(direction.x*r, direction.y*r, direction.z*r);
+				return new Vector3d(direction.x*r, direction.y*r, direction.z*r);
 			}else {
 				//fail;
-				return new Vec3(0,0,0);
+				return new Vector3d(0,0,0);
 			}	
 		}		
 	};
 	
 	public static IVolumeType VOL_HEMISPHERE = new IVolumeType() {
 		@Override
-		public Vec3 getPosition(SAParticleSystem sys, DirResult dir, int i, int count) {
+		public Vector3d getPosition(SAParticleSystem sys, DirResult dir, int i, int count) {
 			Random rand = new Random();
 			if (sys.type.volumeData.length >= 1) {
 				float r;
@@ -325,20 +325,20 @@ public class SAParticleSystemType extends SAFXType{
 					r = MathUtil.randomFloat(rand, 0.0f, sys.type.volumeData[0]);
 				}
 
-				Vec3 direction = new Vec3(a*Math.cos(angle),  y, a*Math.sin(angle));
+				Vector3d direction = new Vector3d(a*Math.cos(angle),  y, a*Math.sin(angle));
 				dir.setValues((float)direction.x, (float)direction.y, (float)direction.z);
 				
-				return new Vec3(direction.x*r, direction.y*r, direction.z*r);
+				return new Vector3d(direction.x*r, direction.y*r, direction.z*r);
 			}else {
 				//fail;
-				return new Vec3(0,0,0);
+				return new Vector3d(0,0,0);
 			}	
 		}		
 	};
 	
 	public static IVolumeType VOL_TRAIL = new IVolumeType() {
 		@Override
-		public Vec3 getPosition(SAParticleSystem sys, DirResult dir, int i, int count) {
+		public Vector3d getPosition(SAParticleSystem sys, DirResult dir, int i, int count) {
 			Random rand = new Random();
 			if (sys.type.volumeData.length >= 1) {
 				
@@ -346,11 +346,11 @@ public class SAParticleSystemType extends SAFXType{
 				
 				Entity ent = sys.entity;
 				if (ent==null){
-					return new Vec3(sys.getX(), sys.getY(),sys.getZ());
+					return new Vector3d(sys.getX(), sys.getY(),sys.getZ());
 				} else {
 					
-					Vec3 motion = new Vec3(ent.getDeltaMovement().x, ent.getDeltaMovement().y, ent.getDeltaMovement().z).normalize();
-					//Vec3 motion = new Vec3(sys.motionX(), sys.motionY(), sys.motionZ()).normalize();
+					Vector3d motion = new Vector3d(ent.getDeltaMovement().x, ent.getDeltaMovement().y, ent.getDeltaMovement().z).normalize();
+					//Vector3d motion = new Vector3d(sys.motionX(), sys.motionY(), sys.motionZ()).normalize();
 					
 					len = sys.type.volumeData[0];
 					float t = (i*1.0f) / (count*1.0f) * len;
@@ -358,22 +358,22 @@ public class SAParticleSystemType extends SAFXType{
 					
 					dir.setValues((float)motion.x, (float)motion.y, (float)motion.z);
 					
-					return new Vec3(-motion.x*t, -motion.y*t, -motion.z*t);
+					return new Vector3d(-motion.x*t, -motion.y*t, -motion.z*t);
 				}
 
 			}else {
 				//fail;
-				return new Vec3(0,0,0);
+				return new Vector3d(0,0,0);
 			}	
 		}		
 	};
 	
 	public interface IVelocityType {		
-		public Vec3 getVelocity(SAParticleSystem sys, float ... params);
+		public Vector3d getVelocity(SAParticleSystem sys, float ... params);
 	}
 	
 	public interface IVolumeType {
-		public Vec3 getPosition(SAParticleSystem sys, DirResult dir, int i, int count);
+		public Vector3d getPosition(SAParticleSystem sys, DirResult dir, int i, int count);
 	}
 
 	public void extend(SAParticleSystemType other) {
@@ -429,7 +429,7 @@ public class SAParticleSystemType extends SAFXType{
 			this.volumeData[i] = other.volumeData[i];
 		}
 		this.volumeType = other.volumeType;
-		this.offset = new Vec3(other.offset.x, other.offset.y, other.offset.z);
+		this.offset = new Vector3d(other.offset.x, other.offset.y, other.offset.z);
 		this.offsetr = new Vec3dr(other.offsetr.x, other.offsetr.y, other.offsetr.z);
 		
 		
@@ -443,7 +443,7 @@ public class SAParticleSystemType extends SAFXType{
 
 
 	@Override
-	public List<SAParticleSystem> createParticleSystems(ClientLevel world, double x, double y, double z,
+	public List<SAParticleSystem> createParticleSystems(ClientWorld world, double x, double y, double z,
 			double motionX, double motionY, double motionZ) {
 		ArrayList<SAParticleSystem> list = new ArrayList<SAParticleSystem>();
 		list.add(new SAParticleSystem(world, this, x, y, z, motionX, motionY, motionZ));
@@ -458,7 +458,7 @@ public class SAParticleSystemType extends SAFXType{
 	}
 	
 	@Override
-	public List<SAParticleSystem> createParticleSystemsOnParticle(ClientLevel worldIn, SAParticle ent) {
+	public List<SAParticleSystem> createParticleSystemsOnParticle(ClientWorld worldIn, SAParticle ent) {
 		ArrayList<SAParticleSystem> list = new ArrayList<SAParticleSystem>();
 		list.add(new SAParticleSystem(worldIn, ent,this));
 		return list;

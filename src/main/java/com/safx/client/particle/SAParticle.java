@@ -1,72 +1,55 @@
 package safx.client.particle;
+
 import java.awt.Color;
-import java.util.Random;
-import com.mojang.blaze3d.platform.GlStateManager;
-//import com.mojang.blaze3d.vertex.IVertexBuilder;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.VertexFormat;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleRenderType;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.BufferUploader;
+import net.minecraft.client.particle.IParticleRenderType;
+import net.minecraft.client.renderer.BufferBuilder;
+import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
 
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.HumanoidArm;
-import net.minecraft.world.phys.AABB;
-
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.level.Level;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.vertex.VertexFormat;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.HandSide;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.Camera;
-import net.minecraft.resources.ResourceLocation;
-
+//import safx.client.models.projectiles.ModelRocket;
 import safx.client.particle.SAParticleSystemType.AlphaEntry;
 import safx.client.particle.SAParticleSystemType.ColorEntry;
+import safx.client.render.SARenderHelper;
+import safx.client.render.SARenderHelper.RenderType;
+//import safx.client.render.item.RenderItemBase;
 import safx.util.MathUtil;
-import safx.client.render.SARenderHelper;
-import safx.client.render.SARenderHelper.RenderTypeSA;
-import com.google.common.collect.ImmutableMap;
-import com.mojang.blaze3d.vertex.VertexFormatElement;
-
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LightLayer;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.core.BlockPos;
-
-import safx.client.render.SARenderHelper;
-import safx.client.render.SARenderHelper.RenderTypeSA;
+import net.minecraft.client.world.ClientWorld;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
+import net.minecraft.client.renderer.ActiveRenderInfo;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.vector.Quaternion;
+import com.mojang.blaze3d.systems.RenderSystem;
 /**
  * An actual spawned particle
  */
 @OnlyIn(Dist.CLIENT)
 public class SAParticle extends Particle implements ISAParticle {
-	protected final Random randomfx = new Random();
-	/*public static final VertexFormat MY_CUSTOM_FORMAT = new VertexFormat(
-    ImmutableMap.<String, VertexFormatElement>builder()
-        .put("Position", DefaultVertexFormat.ELEMENT_POSITION)
-        .put("Color", DefaultVertexFormat.ELEMENT_COLOR)
-        .put("Normal", DefaultVertexFormat.ELEMENT_NORMAL)
-        .put("UV0", DefaultVertexFormat.ELEMENT_UV0)
-        .put("UV2", DefaultVertexFormat.ELEMENT_UV2)
-        .put("Padding", DefaultVertexFormat.ELEMENT_PADDING)
-        .build()
-	);//渲染那里顺序要相同*/
+	
+	//protected static final VertexFormat VERTEX_FORMAT = (new VertexFormat()).addElement(DefaultVertexFormats.POSITION_3F).addElement(DefaultVertexFormats.TEX_2F).addElement(DefaultVertexFormats.COLOR_4UB).addElement(DefaultVertexFormats.TEX_2S).addElement(DefaultVertexFormats.NORMAL_3B).addElement(DefaultVertexFormats.PADDING_1B);
+	protected static final VertexFormat VERTEX_FORMAT = DefaultVertexFormats.POSITION;
 	public float particleScale = 10F;
-	public final void render(VertexConsumer p_225606_1_, Camera p_225606_2_, float p_225606_3_) {
-		////////System.out.println("1Render");
+	public final void render(IVertexBuilder p_225606_1_, ActiveRenderInfo p_225606_2_, float p_225606_3_) {
+		////System.out.println("1Render");
 		//this.renderParticle(buffer, playerIn, partialTickTime, rotX, rotZ, rotYZ, rotXY, rotXZ);
+		
 	}
-	public ParticleRenderType getRenderType() {
-	  return ParticleRenderType.NO_RENDER;
+	public IParticleRenderType getRenderType() {
+	  return IParticleRenderType.NO_RENDER;
 	}
 	
 	/*public double posX;
@@ -116,7 +99,7 @@ public class SAParticle extends Particle implements ISAParticle {
 	
 	//int angle;
 
-	public SAParticle(ClientLevel worldIn, double xCoordIn, double yCoordIn, double zCoordIn, double xSpeedIn,
+	public SAParticle(ClientWorld worldIn, double xCoordIn, double yCoordIn, double zCoordIn, double xSpeedIn,
 			double ySpeedIn, double zSpeedIn, SAParticleSystem particleSystem) {
 		super(worldIn, xCoordIn, yCoordIn, zCoordIn);
 		this.xd = xSpeedIn;
@@ -129,39 +112,39 @@ public class SAParticle extends Particle implements ISAParticle {
 		}
 		
 		private void init() {
-			this.life_time = MathUtil.randomInt(randomfx, type.lifetimeMin, type.lifetimeMax);
+			this.life_time = MathUtil.randomInt(random, type.lifetimeMin, type.lifetimeMax);
 			this.lifetime = life_time;
-			this.size = MathUtil.randomFloat(randomfx, type.sizeMin, type.sizeMax) * this.particleSystem.scale;
+			this.size = MathUtil.randomFloat(random, type.sizeMin, type.sizeMax) * this.particleSystem.scale;
 			this.size+= (this.particleSystem.startSize);
-			this.sizeRate = MathUtil.randomFloat(randomfx, type.sizeRateMin, type.sizeRateMax)  * this.particleSystem.scale;
-			this.sizeRateDamping = MathUtil.randomFloat(randomfx, type.sizeRateDampingMin, type.sizeRateDampingMax);
-			this.animationSpeed = MathUtil.randomFloat(randomfx, type.animationSpeedMin, type.animationSpeedMax);
-			this.velocityDamping = MathUtil.randomFloat(randomfx, type.velocityDampingMin, type.velocityDampingMax);
-			this.systemVelocityFactor = MathUtil.randomFloat(randomfx, type.systemVelocityFactorMin, type.systemVelocityFactorMax);
-		    this.velocityDampingOnGround = MathUtil.randomFloat(randomfx, type.velocityDampingOnGroundMin, type.velocityDampingOnGroundMax);
+			this.sizeRate = MathUtil.randomFloat(random, type.sizeRateMin, type.sizeRateMax)  * this.particleSystem.scale;
+			this.sizeRateDamping = MathUtil.randomFloat(random, type.sizeRateDampingMin, type.sizeRateDampingMax);
+			this.animationSpeed = MathUtil.randomFloat(random, type.animationSpeedMin, type.animationSpeedMax);
+			this.velocityDamping = MathUtil.randomFloat(random, type.velocityDampingMin, type.velocityDampingMax);
+			this.systemVelocityFactor = MathUtil.randomFloat(random, type.systemVelocityFactorMin, type.systemVelocityFactorMax);
+		    this.velocityDampingOnGround = MathUtil.randomFloat(random, type.velocityDampingOnGroundMin, type.velocityDampingOnGroundMax);
 			
-		    this.angle = MathUtil.randomFloat(randomfx, type.angleMin, type.angleMax);
-		    this.angleRate = MathUtil.randomFloat(randomfx, type.angleRateMin, type.angleRateMax);
-		    this.angleRateDamping = MathUtil.randomFloat(randomfx, type.angleRateDampingMin, type.angleRateDampingMax);
+		    this.angle = MathUtil.randomFloat(random, type.angleMin, type.angleMax);
+		    this.angleRate = MathUtil.randomFloat(random, type.angleRateMin, type.angleRateMax);
+		    this.angleRateDamping = MathUtil.randomFloat(random, type.angleRateDampingMin, type.angleRateDampingMax);
 		    
-		    ////System.out.printf("###INIT:Motion1=(%.2f / %.2f / %.2f)\n",this.xo, this.yo, this.xo);
+		    //System.out.printf("###INIT:Motion1=(%.2f / %.2f / %.2f)\n",this.xo, this.yo, this.xo);
 		    
 			this.xd+=(systemVelocityFactor*particleSystem.motionX());
 			this.yd+=(systemVelocityFactor*particleSystem.motionY());
 			this.zd+=(systemVelocityFactor*particleSystem.motionZ());
 			
-			////System.out.printf("###INIT:Motion=(%.2f / %.2f / %.2f)\n",this.xo, this.yo, this.xo);
-			////////System.out.println("###INIT:VelType="+this.type.velocityType.toString());
-			////System.out.printf("###INIT:Type.VelocityData=[%.2f, %.2f, %.2f]\n",this.type.velocityDataMin[0], this.type.velocityDataMin[1], this.type.velocityDataMin[2]);
+			//System.out.printf("###INIT:Motion=(%.2f / %.2f / %.2f)\n",this.xo, this.yo, this.xo);
+			////System.out.println("###INIT:VelType="+this.type.velocityType.toString());
+			//System.out.printf("###INIT:Type.VelocityData=[%.2f, %.2f, %.2f]\n",this.type.velocityDataMin[0], this.type.velocityDataMin[1], this.type.velocityDataMin[2]);
 			
 			this.velX = this.xd;
 			this.velY = this.yd;
 			this.velZ = this.zd;
 			
-			this.variationFrame = randomfx.nextInt(type.frames);
+			this.variationFrame = random.nextInt(type.frames);
 			
 //			if (type.randomRotation) {
-//				angle = randomfx.nextInt(4);
+//				angle = random.nextInt(4);
 //			}
 		}
 	
@@ -196,27 +179,27 @@ public class SAParticle extends Particle implements ISAParticle {
 				if (this.type.particlesMoveWithSystem && this.particleSystem.attachToHead && this.particleSystem.entity instanceof LivingEntity) {
 					LivingEntity ent = (LivingEntity)this.particleSystem.entity;
 					
-					double p = ent.getXRot()*MathUtil.D2R;
+					double p = ent.xRot*MathUtil.D2R;
 					double y = ent.yHeadRot*MathUtil.D2R;
 					
 					double prevP = ent.xRotO * MathUtil.D2R;
 					double prevY =ent.yHeadRotO * MathUtil.D2R;
 					
-					Vec3 offsetBase = this.particleSystem.entityOffset.add(this.particleSystem.type.offset);
+					Vector3d offsetBase = this.particleSystem.entityOffset.add(this.particleSystem.type.offset);
 					
 					//ViewBobbing
-					if (this.particleSystem.entity == Minecraft.getInstance().player
-						&& Minecraft.getInstance().options.getCameraType().isFirstPerson()
-						&& Minecraft.getInstance().options.bobView().get()) {
-						Vec3 vec = setupViewBobbing(1.0f).scale(2.0);
+					/*if (this.particleSystem.entity == Minecraft.getInstance().player
+							&& Minecraft.getInstance().gameSettings.thirdPersonView == 0
+							&& Minecraft.getInstance().gameSettings.viewBobbing) {
+						Vector3d vec = setupViewBobbing(1.0f).scale(2.0);
 						offsetBase = offsetBase.add(vec);
 					}
+					*/
 					
-					
-					Vec3 offset = offsetBase.xRot((float)-p);
+					Vector3d offset = offsetBase.xRot((float)-p);
 					offset = offset.yRot((float)-y);
 					
-					Vec3 offsetP = offsetBase.xRot((float)-prevP);
+					Vector3d offsetP = offsetBase.xRot((float)-prevP);
 					offsetP = offsetP.yRot((float)-prevY);
 
 					this.xo = this.particleSystem.entity.xo + offsetP.x;
@@ -247,14 +230,14 @@ public class SAParticle extends Particle implements ISAParticle {
 			double dP = (this.particleSystem.xRot - this.particleSystem.prevRotationPitch)*MathUtil.D2R;
 			double dY = (this.particleSystem.yRot - this.particleSystem.prevRotationYaw)*MathUtil.D2R;
 			
-			Vec3 pos = new Vec3(this.x,  this.y, this.z);
-			Vec3 sysPos = new Vec3(this.particleSystem.getX(), this.particleSystem.getY(), this.particleSystem.getZ());
+			Vector3d pos = new Vector3d(this.x,  this.y, this.z);
+			Vector3d sysPos = new Vector3d(this.particleSystem.getX(), this.particleSystem.getY(), this.particleSystem.getZ());
 			
-			Vec3 offset = sysPos.subtract(pos);
+			Vector3d offset = sysPos.subtract(pos);
 			offset = offset.yRot((float)-dY);
 			offset = offset.xRot((float)-dP);
 			
-			Vec3 motion = new Vec3 (this.xd, this.yd, this.zd);
+			Vector3d motion = new Vector3d (this.xd, this.yd, this.zd);
 			motion = motion.yRot((float)-dY);
 			motion = motion.xRot((float)-dP);
 			
@@ -276,8 +259,8 @@ public class SAParticle extends Particle implements ISAParticle {
 		this.zd = velZ;
 		this.yd -= type.gravity; //(0.05d * (double) type.gravity * (double) this.ticksExisted);		
 		//this.moveEntity(this.xo, this.yo, this.xo);
-		////System.out.printf("Velocity=(%.2f / %.2f / %.2f)\n",this.velX, this.velY, this.velZ);
-		////System.out.printf("Motion=(%.2f / %.2f / %.2f)\n",this.xo, this.yo, this.xo);
+		//System.out.printf("Velocity=(%.2f / %.2f / %.2f)\n",this.velX, this.velY, this.velZ);
+		//System.out.printf("Motion=(%.2f / %.2f / %.2f)\n",this.xo, this.yo, this.xo);
 		this.setPos(this.x+this.xd, this.y+this.yd, this.z+this.zd);
 		
 		this.velX *= velocityDamping;
@@ -310,56 +293,72 @@ public class SAParticle extends Particle implements ISAParticle {
      */
     public void renderParticle(BufferBuilder buffer, Entity playerIn, float partialTickTime, float rotX, float rotZ, float rotYZ, float rotXY, float rotXZ)
     {
-		float progress = ((float)this.age+partialTickTime) / (/*1.75F**/(float)this.lifetime);
+    	float progress = ((float)this.age+partialTickTime) / (/*1.75F**/(float)this.lifetime);
+    	
     	preRenderStep(progress);   	
+    	
+		/*-------------------
+		 * ANIMATION
+		 */	
 		int currentFrame = 0;
         if (type.hasVariations) {
         	currentFrame = variationFrame;
         }else {
         	currentFrame = ((int)((float)type.frames*(progress * this.animationSpeed))) % type.frames;
         }
+    	
+    	/* -------------
+         * RENDER PARTICLE
+         */
         this.particleScale = sizePrev + (size-sizePrev)*partialTickTime;
+    	
+        //Minecraft.getInstance().renderEngine.bindTexture(type.texture);
+        Minecraft.getInstance().getTextureManager().bind(type.texture);
+
+//        float f6 = ((float)this.particleTextureIndexX + this.particleTextureJitterX / 4.0F) / 16.0F;
+//        float f7 = f6 + 0.015609375F;
+//        float f8 = ((float)this.particleTextureIndexY + this.particleTextureJitterY / 4.0F) / 16.0F;
+//        float f9 = f8 + 0.015609375F;
         float fscale = 0.1F * this.particleScale;
-        float fPosX = (float)(this.xo + (this.x - this.xo) * partialTickTime - (!this.itemAttached ? SAParticleManager.interpPosX :0));
-        float fPosY = (float)(this.yo + (this.y - this.yo) * partialTickTime - (!this.itemAttached ? SAParticleManager.interpPosY :0));
-        float fPosZ = (float)(this.zo + (this.z - this.zo) * partialTickTime - (!this.itemAttached ? SAParticleManager.interpPosZ :0));
-        Minecraft mc = Minecraft.getInstance();
+
+        float fPosX = (float)(this.xo + (this.x - this.xo) * (double)partialTickTime - (!this.itemAttached ? SAParticleManager.interpPosX :0));
+        float fPosY = (float)(this.yo + (this.y - this.yo) * (double)partialTickTime - (!this.itemAttached ? SAParticleManager.interpPosY :0));
+        float fPosZ = (float)(this.zo + (this.z - this.zo) * (double)partialTickTime - (!this.itemAttached ? SAParticleManager.interpPosZ :0));
+        /*Minecraft mc = Minecraft.getInstance();
+		if(!mc.options.getCameraType().isFirstPerson()){
+			fPosY = fPosY - 0.5F;
+		}*/
+
         float r = fscale;
+        
 		int col = currentFrame % type.columns;
 		int row = (currentFrame / type.columns);
+		
 		float u = 1.f/type.columns;
 		float v = 1.f/type.columns; 
 		float U1 = col*u;
 		float V1 = row*v;
 		float U2 = (col+1)*u;
 		float V2 = (row+1)*v;
+		
 		float ua, va, ub, vb, uc, vc, ud, vd;
 		ua=U2; va=V2; ub = U2; vb= V1; uc = U1; vc = V1; ud=U1; vd = V2;
-		RenderSystem.setShader(GameRenderer::getPositionColorTexLightmapShader);
-		RenderSystem.setShaderTexture(0, type.texture);
-		enableBlendMode();
-		//RenderSystem.depthMask(true);
-		//RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-		int light=LightTexture.pack(15, 15);
-		if(type.renderType == RenderTypeSA.ALPHA_SHADED){
-			Level level = mc.level;
-			BlockPos renderPos = new BlockPos((int)this.x, (int)this.y, (int)this.z);
-			int blockLight = level.getBrightness(LightLayer.BLOCK, renderPos);
-			int skyLight = level.getBrightness(LightLayer.SKY, renderPos);
-			light = LightTexture.pack(blockLight, skyLight);
-		}
-		//RenderSystem.setShader(GameRenderer::getPositionColorTexLightmapShader);
-        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP);
-		//BufferUploader.drawWithShader(buffer.end());
 		
+		enableBlendMode();
+
+		//RenderSystem.depthMask(true);
+
+		GlStateManager._color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        buffer.begin(7, DefaultVertexFormats.POSITION_COLOR_TEX);
         double a = (angle + (partialTickTime * angleRate)) * MathUtil.D2R;
-		Vec3 p1, p2, p3, p4;
+		Vector3d p1, p2, p3, p4;
+		
 		if (this.type.groundAligned) {
 			float s = fscale;
-			p1 = new Vec3(-s,0,-s);
-			p2 = new Vec3(s,0,-s);
-			p3 = new Vec3(s,0,s);
-			p4 = new Vec3(-s,0,s);
+			p1 = new Vector3d(-s,0,-s);
+			p2 = new Vector3d(s,0,-s);
+			p3 = new Vector3d(s,0,s);
+			p4 = new Vector3d(-s,0,s);
 			if (a > 0.0001f) {
 				p1 = p1.yRot((float) a);
 				p2 = p2.yRot((float) a);
@@ -367,30 +366,45 @@ public class SAParticle extends Particle implements ISAParticle {
 				p4 = p4.yRot((float) a);
 			}
 		}else {
-	        p1 = new Vec3((double)(- rotX * fscale - rotXY * fscale), (double)(- rotZ * fscale), (double)(- rotYZ * fscale - rotXZ * fscale));
-	        p2 = new Vec3((double)(- rotX * fscale + rotXY * fscale), (double)( + rotZ * fscale), (double)( - rotYZ * fscale + rotXZ * fscale));
-	        p3 = new Vec3((double)( rotX * fscale + rotXY * fscale), (double)( + rotZ * fscale), (double)( + rotYZ * fscale + rotXZ * fscale));
-	        p4 = new Vec3((double)( rotX * fscale - rotXY * fscale), (double)( - rotZ * fscale), (double)( + rotYZ * fscale - rotXZ * fscale));        
+	        p1 = new Vector3d((double)(- rotX * fscale - rotXY * fscale), (double)(- rotZ * fscale), (double)(- rotYZ * fscale - rotXZ * fscale));
+	        p2 = new Vector3d((double)(- rotX * fscale + rotXY * fscale), (double)( + rotZ * fscale), (double)( - rotYZ * fscale + rotXZ * fscale));
+	        p3 = new Vector3d((double)( rotX * fscale + rotXY * fscale), (double)( + rotZ * fscale), (double)( + rotYZ * fscale + rotXZ * fscale));
+	        p4 = new Vector3d((double)( rotX * fscale - rotXY * fscale), (double)( - rotZ * fscale), (double)( + rotYZ * fscale - rotXZ * fscale));        
+	        
 	        if (a > 0.0001f) {
-		        Vec3 axis = p1.normalize().cross(p2.normalize());
+		        Vector3d axis = p1.normalize().cross(p2.normalize());
 				double cosa = Math.cos(a);
 				double sina = Math.sin(a);
+		        
 		        p1 = rotAxis(p1, axis, sina, cosa);
 		        p2 = rotAxis(p2, axis, sina, cosa);
 		        p3 = rotAxis(p3, axis, sina, cosa);
 		        p4 = rotAxis(p4, axis, sina, cosa);     
 	        }	        		
 		}
-		buffer.vertex(p1.x + fPosX, p1.y + fPosY, p1.z + fPosZ).color(this.rCol, this.gCol, this.bCol, this.alpha).uv(ua, va).uv2(light).endVertex();
-		buffer.vertex(p2.x + fPosX, p2.y + fPosY, p2.z + fPosZ).color(this.rCol, this.gCol, this.bCol, this.alpha).uv(ub, vb).uv2(light).endVertex();
-		buffer.vertex(p3.x + fPosX, p3.y + fPosY, p3.z + fPosZ).color(this.rCol, this.gCol, this.bCol, this.alpha).uv(uc, vc).uv2(light).endVertex();
-		buffer.vertex(p4.x + fPosX, p4.y + fPosY, p4.z + fPosZ).color(this.rCol, this.gCol, this.bCol, this.alpha).uv(ud, vd).uv2(light).endVertex();
-		//Tesselator.getInstance().end();
-		BufferUploader.drawWithShader(buffer.end());
-        //System.out.println("DoRenderEnd1");
+		
+		/*buffer.pos(p1.x + fPosX, p1.y + fPosY, p1.z + fPosZ).tex((double)ua, (double)va)._color4f(this.rCol, this.gCol, this.bCol, this.alpha).lightmap(0, 240).normal(0.0f, 1.0f, 0.0f).endVertex();
+		buffer.pos(p2.x + fPosX, p2.y + fPosY, p2.z + fPosZ).tex((double)ub, (double)vb)._color4f(this.rCol, this.gCol, this.bCol, this.alpha).lightmap(0, 240).normal(0.0f, 1.0f, 0.0f).endVertex();
+		buffer.pos(p3.x + fPosX, p3.y + fPosY, p3.z + fPosZ).tex((double)uc, (double)vc)._color4f(this.rCol, this.gCol, this.bCol, this.alpha).lightmap(0, 240).normal(0.0f, 1.0f, 0.0f).endVertex();
+		buffer.pos(p4.x + fPosX, p4.y + fPosY, p4.z + fPosZ).tex((double)ud, (double)vd)._color4f(this.rCol, this.gCol, this.bCol, this.alpha).lightmap(0, 240).normal(0.0f, 1.0f, 0.0f).endVertex();*/
+		if(type.renderType == RenderType.ALPHA_SHADED){
+			buffer.vertex(p1.x + fPosX, p1.y + fPosY-1.65F, p1.z + fPosZ).color(this.rCol, this.gCol, this.bCol, this.alpha)/*.overlayCoords(0, 240)*/.normal(0.0f, 1.0f, 0.0f).uv(ua, va).endVertex();
+			buffer.vertex(p2.x + fPosX, p2.y + fPosY-1.65F, p2.z + fPosZ).color(this.rCol, this.gCol, this.bCol, this.alpha)/*.overlayCoords(0, 240)*/.normal(0.0f, 1.0f, 0.0f).uv(ub, vb).endVertex();
+			buffer.vertex(p3.x + fPosX, p3.y + fPosY-1.65F, p3.z + fPosZ).color(this.rCol, this.gCol, this.bCol, this.alpha)/*.overlayCoords(0, 240)*/.normal(0.0f, 1.0f, 0.0f).uv(uc, vc).endVertex();
+			buffer.vertex(p4.x + fPosX, p4.y + fPosY-1.65F, p4.z + fPosZ).color(this.rCol, this.gCol, this.bCol, this.alpha)/*.overlayCoords(0, 240)*/.normal(0.0f, 1.0f, 0.0f).uv(ud, vd).endVertex();
+		}else{
+			buffer.vertex(p1.x + fPosX, p1.y + fPosY-1.65F, p1.z + fPosZ).color(this.rCol, this.gCol, this.bCol, this.alpha).overlayCoords(0, 240).normal(0.0f, 1.0f, 0.0f).uv(ua, va).endVertex();
+			buffer.vertex(p2.x + fPosX, p2.y + fPosY-1.65F, p2.z + fPosZ).color(this.rCol, this.gCol, this.bCol, this.alpha).overlayCoords(0, 240).normal(0.0f, 1.0f, 0.0f).uv(ub, vb).endVertex();
+			buffer.vertex(p3.x + fPosX, p3.y + fPosY-1.65F, p3.z + fPosZ).color(this.rCol, this.gCol, this.bCol, this.alpha).overlayCoords(0, 240).normal(0.0f, 1.0f, 0.0f).uv(uc, vc).endVertex();
+			buffer.vertex(p4.x + fPosX, p4.y + fPosY-1.65F, p4.z + fPosZ).color(this.rCol, this.gCol, this.bCol, this.alpha).overlayCoords(0, 240).normal(0.0f, 1.0f, 0.0f).uv(ud, vd).endVertex();
+		}
+		Tessellator.getInstance().end();
+        //new ModelRocket().render(null, 0, 0, 0, 0, 0, 0.625f, 0, 0f, TransformType.GROUND, 0, 0f, 0f);
+        ////System.out.println("DoRenderNormal");
+        
         disableBlendMode();
     }
-	
+    
     /**
      * interpolate colors and alpha values
      */
@@ -437,7 +451,7 @@ public class SAParticle extends Particle implements ISAParticle {
 		}
 		
 //		if (p > 0.99f)
-//			//////System.out.println(String.format("R=%.3f, G=%.3f, B=%.3f", this.rCol, this.gCol, this.bCol));
+//			//System.out.println(String.format("R=%.3f, G=%.3f, B=%.3f", this.rCol, this.gCol, this.bCol));
 		
 		/*-------------------------
 		 * INTERPOLATE ALPHA VALUES
@@ -468,7 +482,7 @@ public class SAParticle extends Particle implements ISAParticle {
     		}
 		}
 //		if (p > 0.99f)
-//			//////System.out.println(String.format("A=%.3f", this.alpha));
+//			//System.out.println(String.format("A=%.3f", this.alpha));
     }
     
     public int getBrightnessForRender(float p_189214_1_)
@@ -478,17 +492,17 @@ public class SAParticle extends Particle implements ISAParticle {
 	
 	protected void enableBlendMode() {
 		//GlStateManager.pushAttrib();
-    	if (type.renderType != RenderTypeSA.SOLID) {
+    	if (type.renderType != RenderType.SOLID) {
     		GlStateManager._enableBlend();
     		GlStateManager._depthMask(false);
     	}
-        if (type.renderType == RenderTypeSA.ALPHA||type.renderType == RenderTypeSA.ALPHA_SHADED) {
+        if (type.renderType == RenderType.ALPHA||type.renderType == RenderType.ALPHA_SHADED) {
         	//GlStateManager._blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 			//RenderSystem.enableBlend();
 			RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, 
 			GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
 			//RenderSystem.alphaFunc(516, 0.003921569F);
-        } else if (type.renderType == RenderTypeSA.ADDITIVE || type.renderType==RenderTypeSA.NO_Z_TEST) {
+        } else if (type.renderType == RenderType.ADDITIVE || type.renderType==RenderType.NO_Z_TEST) {
         	//GlStateManager._blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
 			//RenderSystem.enableBlend();
 			RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, 
@@ -496,31 +510,31 @@ public class SAParticle extends Particle implements ISAParticle {
 			//RenderSystem.alphaFunc(516, 0.003921569F);
         }
         
-        if (type.renderType==RenderTypeSA.NO_Z_TEST){
+        if (type.renderType==RenderType.NO_Z_TEST){
         	GlStateManager._depthMask(false);
         	GlStateManager._enableDepthTest();//_disableDepth
         }
         
-        /*if (type.renderType != RenderTypeSA.ALPHA_SHADED) */SARenderHelper.enableFXLighting();
+        /*if (type.renderType != RenderType.ALPHA_SHADED) */SARenderHelper.enableFXLighting();
 	}
 	
 	protected void disableBlendMode() {
-		/*if (type.renderType != RenderTypeSA.ALPHA_SHADED) */SARenderHelper.disableFXLighting();
-		if (type.renderType != RenderTypeSA.SOLID) {
+		/*if (type.renderType != RenderType.ALPHA_SHADED) */SARenderHelper.disableFXLighting();
+		if (type.renderType != RenderType.SOLID) {
     		GlStateManager._disableBlend();
     		GlStateManager._depthMask(true);
     	}
-		if (type.renderType == RenderTypeSA.ALPHA||type.renderType == RenderTypeSA.ALPHA_SHADED) {
+		if (type.renderType == RenderType.ALPHA||type.renderType == RenderType.ALPHA_SHADED) {
         	//GlStateManager._blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
 			RenderSystem.defaultBlendFunc();
 			//RenderSystem.disableBlend();
-        } else if (type.renderType == RenderTypeSA.ADDITIVE || type.renderType==RenderTypeSA.NO_Z_TEST) {
+        } else if (type.renderType == RenderType.ADDITIVE || type.renderType==RenderType.NO_Z_TEST) {
         	//GlStateManager._blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
 			RenderSystem.defaultBlendFunc();
 			//RenderSystem.disableBlend();
         }
 		
-        if (type.renderType==RenderTypeSA.NO_Z_TEST){
+        if (type.renderType==RenderType.NO_Z_TEST){
         	GlStateManager._depthMask(true);
         	GlStateManager._enableDepthTest();
         }
@@ -537,16 +551,16 @@ public class SAParticle extends Particle implements ISAParticle {
 		return 3;
 	}
 	
-	protected Vec3 rotAxis(Vec3 p1, Vec3 axis, double sina, double cosa) {	
-		  Vec3 v1 = axis.cross(p1);
+	protected Vector3d rotAxis(Vector3d p1, Vector3d axis, double sina, double cosa) {	
+		  Vector3d v1 = axis.cross(p1);
 		  double d1 = axis.dot(p1);
 		  return p1.scale(cosa).add(v1.scale(sina)).add(axis.scale(d1*(1.0 - cosa)));			
-		//  return p1.scale(cosa).add(axis.crossProduct(p1).scale((float)Math.sin(a))).add(axis.scale(axis.dotProduct(p1)*(1.0 - Math.cos(a))));			
+		//  return p1.scale(cosa).add(axis.crossProduct(p1).scale(Math.sin(a))).add(axis.scale(axis.dotProduct(p1)*(1.0 - Math.cos(a))));			
 	}
 
 	@Override
-	public Vec3 getPos() {
-		return new Vec3(this.x, this.y, this.z);
+	public Vector3d getPos() {
+		return new Vector3d(this.x, this.y, this.z);
 	}
 
 	@Override
@@ -567,13 +581,13 @@ public class SAParticle extends Particle implements ISAParticle {
 	}
 
 	@Override
-	public AABB getRenderBoundingBox(float partialTickTime, Entity viewEnt) {
+	public AxisAlignedBB getRenderBoundingBox(float partialTickTime, Entity viewEnt) {
 		double fPosX = (this.x-viewEnt.getX());
 		double fPosY = (this.y-viewEnt.getY());
 		double fPosZ = (this.z-viewEnt.getZ());
 	    
 		double s = size*0.5;
-		return new AABB(fPosX-s, fPosY-s, fPosZ-s, fPosX+s, fPosY+s, fPosZ+s);
+		return new AxisAlignedBB(fPosX-s, fPosY-s, fPosZ-s, fPosX+s, fPosY+s, fPosZ+s);
 	}
 
 	@Override
@@ -586,24 +600,24 @@ public class SAParticle extends Particle implements ISAParticle {
 		this.depth=depth;
 	}
 	
-	private Vec3 setupViewBobbing(float ptt)
+	private Vector3d setupViewBobbing(float ptt)
     {
-        if (Minecraft.getInstance().getCameraEntity() instanceof Player)
+        if (Minecraft.getInstance().getCameraEntity() instanceof PlayerEntity)
         {
-            Player Player = (Player)Minecraft.getInstance().getCameraEntity();
-            float f1 = Player.walkDist - Player.walkDistO;
-            float f2 = -(Player.walkDist + f1 * ptt);
-            float f3 = Player.oBob + (Player.bob - Player.oBob) * ptt;
-            //float f4 = /*Player.prevCameraPitch + (Player.cameraPitch - Player.prevCameraPitch) * ptt*/Player.rotOffs;
+            PlayerEntity PlayerEntity = (PlayerEntity)Minecraft.getInstance().getCameraEntity();
+            float f1 = PlayerEntity.walkDist - PlayerEntity.walkDistO;
+            float f2 = -(PlayerEntity.walkDist + f1 * ptt);
+            float f3 = PlayerEntity.oBob + (PlayerEntity.bob - PlayerEntity.oBob) * ptt;
+            //float f4 = /*PlayerEntity.prevCameraPitch + (PlayerEntity.cameraPitch - PlayerEntity.prevCameraPitch) * ptt*/PlayerEntity.rotOffs;
 			float f4 = 1F;
             float F1 = 1.0f; // (float) Keybinds.X;
             float F2 = 1.0f; //(float) Keybinds.Y;
             
-            Vec3 vec = new Vec3((float)Math.sin(f2 * (float)Math.PI) * f3 * 0.5F * F1,  -Math.abs((float)Math.cos(f2 * (float)Math.PI) * f3) * F2, 0.0F);
-            vec = MathUtil.rotateVec3dAroundZ(vec, (float)Math.sin(f2 * (float)Math.PI) * f3 * 3.0F * (float)MathUtil.D2R);
-            return vec.xRot((float)Math.abs((float)Math.cos(f2 * (float)Math.PI - 0.2F) * f3) * 5.0F * (float)MathUtil.D2R).xRot(f4 * (float)MathUtil.D2R);	
+            Vector3d vec = new Vector3d(MathHelper.sin(f2 * (float)Math.PI) * f3 * 0.5F * F1,  -Math.abs(MathHelper.cos(f2 * (float)Math.PI) * f3) * F2, 0.0F);
+            vec = MathUtil.rotateVec3dAroundZ(vec, MathHelper.sin(f2 * (float)Math.PI) * f3 * 3.0F * (float)MathUtil.D2R);
+            return vec.xRot(Math.abs(MathHelper.cos(f2 * (float)Math.PI - 0.2F) * f3) * 5.0F * (float)MathUtil.D2R).xRot(f4 * (float)MathUtil.D2R);	
         }else {
-        	return new Vec3(0,0,0);
+        	return new Vector3d(0,0,0);
         }
     }
 

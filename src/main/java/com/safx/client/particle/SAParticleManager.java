@@ -4,33 +4,28 @@ import java.util.Comparator;
 import java.util.Iterator;
 import org.lwjgl.opengl.GL11;
 import net.minecraft.client.Minecraft;
-import com.mojang.blaze3d.vertex.BufferBuilder;
+import net.minecraft.client.renderer.BufferBuilder;
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.world.entity.Entity;
-import com.mojang.math.Axis;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Vector3d;
 import safx.client.particle.list.ParticleList;
 import safx.client.particle.list.ParticleList.ParticleListIterator;
-import net.minecraft.client.Camera;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.client.gui.GuiGraphics;
+import safx.client.render.GLStateSnapshot;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
+import net.minecraft.client.renderer.ActiveRenderInfo;
+import net.minecraft.util.ResourceLocation;
 
-import net.minecraft.world.phys.AABB;
-import net.minecraft.client.renderer.culling.Frustum;
-
-import safx.FXConfig;
 public class SAParticleManager {
     public static double interpPosX;
     public static double interpPosY;
     public static double interpPosZ;
-
+	
     public static double interpPosXs;
     public static double interpPosYs;
     public static double interpPosZs;
-
+	
 	protected ParticleList<SAParticleSystem> list_systems = new ParticleList<>();
 	protected ParticleList<ISAParticle> list = new ParticleList<>();
 	protected ParticleList<ISAParticle> list_nosort = new ParticleList<>();
@@ -38,7 +33,10 @@ public class SAParticleManager {
 	
 	public void addEffect(ISAParticle effect)
     {
-        if (effect == null) return;
+		String[] parts = Minecraft.getInstance().fpsString.split(" ");
+        int fps = Integer.parseInt(parts[0]);
+		
+        if (effect == null||fps<5) return;
         if(effect instanceof SAParticleSystem) {
         	list_systems.add((SAParticleSystem) effect);
         } else {
@@ -53,7 +51,9 @@ public class SAParticleManager {
 	
 	public void tickParticles() {
 		if(Minecraft.getInstance().isPaused()) return;
+		
 		Entity viewEnt = Minecraft.getInstance().getCameraEntity();
+		
 		Iterator<SAParticleSystem> sysit = list_systems.iterator();
 		while(sysit.hasNext()) {
 			SAParticleSystem p = sysit.next();
@@ -63,9 +63,11 @@ public class SAParticleManager {
 				sysit.remove();
 			}
 		}
+		
 		ParticleListIterator<ISAParticle> it = list.iterator();
 		while(it.hasNext()) {
 			ISAParticle p = it.next();
+			
 			p.updateTick();
 			if(p.shouldRemove()) {
 				it.remove();
@@ -75,6 +77,7 @@ public class SAParticleManager {
 				}
 			}
 		}
+		
 		Iterator<ISAParticle> it2 = list_nosort.iterator();
 		while(it2.hasNext()) {
 			ISAParticle p = it2.next();
@@ -91,55 +94,59 @@ public class SAParticleManager {
 	 * @param playerIn renderViewEntity
 	 * @param partialTick
 	 */
-	public void renderParticles(Entity playerIn, float partialTicks, Camera activeRenderInfoIn, PoseStack stack/*, Frustum frustum*/)
+	public void renderParticles(Entity playerIn, float partialTicks)
     {
-        float f1 = (float)Math.cos(activeRenderInfoIn.getYRot() * 0.017453292F);
-        float f2 = (float)Math.sin(activeRenderInfoIn.getYRot() * 0.017453292F);
-        float f3 = -f2 * (float)Math.sin(activeRenderInfoIn.getXRot() * 0.017453292F);
-        float f4 = f1 * (float)Math.sin(activeRenderInfoIn.getXRot() * 0.017453292F);
-        float f5 = (float)Math.cos(activeRenderInfoIn.getXRot() * 0.017453292F);
+        float f1 = MathHelper.cos(playerIn.yRot * 0.017453292F);
+        float f2 = MathHelper.sin(playerIn.yRot * 0.017453292F);
+        float f3 = -f2 * MathHelper.sin(playerIn.xRot * 0.017453292F);
+        float f4 = f1 * MathHelper.sin(playerIn.xRot * 0.017453292F);
+        float f5 = MathHelper.cos(playerIn.xRot * 0.017453292F);
+		//GL11.glPushMatrix();//glstart
+		GlStateManager._pushMatrix();
+		Minecraft mc = Minecraft.getInstance();
+		ActiveRenderInfo activeRenderInfoIn = Minecraft.getInstance().getEntityRenderDispatcher().camera;
+		Vector3d camera = activeRenderInfoIn.getPosition();
+		interpPosX = camera.x();
+		interpPosY = camera.y()-1.5;
+		interpPosZ = camera.z();
 		
-		Vec3 came_vec = activeRenderInfoIn.getPosition();
-		interpPosX = came_vec.x();
-		interpPosY = came_vec.y();
-		interpPosZ = came_vec.z();
+		activeRenderInfoIn.setup(mc.level, (Entity)(mc.getCameraEntity() == null ? mc.player : mc.getCameraEntity()), !mc.options.getCameraType().isFirstPerson(), mc.options.getCameraType().isMirrored(), partialTicks);
+		net.minecraftforge.client.event.EntityViewRenderEvent.CameraSetup cameraSetup = net.minecraftforge.client.ForgeHooksClient.onCameraSetup(mc.gameRenderer, activeRenderInfoIn, partialTicks);
+		activeRenderInfoIn.setAnglesInternal(cameraSetup.getYaw(), cameraSetup.getPitch());
 		
+		GlStateManager._rotatef(cameraSetup.getRoll(), 0.0F, 0.0F, 1.0F);
+		GlStateManager._rotatef(activeRenderInfoIn.getXRot(), 1.0F, 0.0F, 0.0F);
+		GlStateManager._rotatef(activeRenderInfoIn.getYRot() + 180.0F, 0.0F, 1.0F, 0.0F);
+		
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder bufferbuilder = tessellator.getBuilder();
+        
         interpPosXs = playerIn.xOld + (playerIn.getX() - playerIn.xOld) * (double)partialTicks;
         interpPosYs = playerIn.yOld + (playerIn.getY() - playerIn.yOld) * (double)partialTicks;
         interpPosZs = playerIn.zOld + (playerIn.getZ() - playerIn.zOld) * (double)partialTicks;
-		//RenderSystem.depthMask(true);
-        RenderSystem.disableCull();
-        Tesselator tessellator = Tesselator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBuilder();
-		
-		//float range = 0.5F;
-        this.list.forEach(p -> {
-			/*AABB aabb = new AABB(p.getPos().x-range, p.getPos().y-range, p.getPos().z-range, 
-			p.getPos().x+range, p.getPos().y+range, p.getPos().z+range).inflate(1.0);*/
-			// 视锥体剔除
-			/*if (frustum.isVisible(p.getRenderBoundingBox(partialTicks,playerIn)))*/
-			if(came_vec.distanceToSqr(p.getPos())<FXConfig.render_range*FXConfig.render_range){
-				p.doRender(bufferbuilder, playerIn, partialTicks, f1, f5, f2, f3, f4);
-			}
+        
+        GlStateManager._disableCull();
+        this.list.forEach(p -> {	
+        	p.doRender(bufferbuilder, playerIn, partialTicks, f1, f5, f2, f3, f4);
         });
+        
         this.list_nosort.forEach(p -> {	
-			/*if (frustum.isVisible(p.getRenderBoundingBox(partialTicks,playerIn)))*/
-			if(came_vec.distanceToSqr(p.getPos())<FXConfig.render_range*FXConfig.render_range){
-				p.doRender(bufferbuilder, playerIn, partialTicks, f1, f5, f2, f3, f4);
-			}
-        });//streak
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-		//stack.popPose();
+        	p.doRender(bufferbuilder, playerIn, partialTicks, f1, f5, f2, f3, f4);
+        });
+        GlStateManager._color4f(1f, 1f, 1f, 1f);
+		GlStateManager._popMatrix();
 		//GL11.glPopMatrix();//glend
     }
 
 	
-	public double distanceToPlane(Entity viewEntity, Vec3 pos) {
-		Vec3 n = viewEntity.getLookAngle();//getLookVec
+	public double distanceToPlane(Entity viewEntity, Vector3d pos) {
+		//Formula from: http://geomalgorithms.com/a04-_planes.html
+		Vector3d n = viewEntity.getLookAngle();//getLookVec
 		double dot1 = -n.dot(pos.subtract(viewEntity.getPosition(1F)));//getPositionVector
 		double dot2 = n.dot(n);//dotProduct
 		double f = dot1/dot2;
-		Vec3 pos2 = pos.add(n.scale(f));
+		
+		Vector3d pos2 = pos.add(n.scale(f));
 		return pos.distanceToSqr(pos2);
 	}
 	
@@ -167,5 +174,7 @@ public class SAParticleManager {
 			//}
 			//return 0;
 		}
+		
+
 	}
 }

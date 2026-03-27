@@ -7,16 +7,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.level.Level;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.Hand;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.World;
 import safx.client.particle.SAParticleSystemType.AlphaEntry;
 import safx.client.particle.SAParticleSystemType.ColorEntry;
-import safx.client.render.SARenderHelper.RenderTypeSA;
+import safx.client.render.SARenderHelper.RenderType;
 import safx.util.SALogger;
-import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.world.ClientWorld;
 /**
  * Handles the loading and storage of all ParticleSystem types
  */
@@ -33,14 +33,14 @@ public class SAFX {
 	public static HashMap<String, SAFXType> FXList = new HashMap<String, SAFXType>();
 
 	
-	public static List<SAParticleSystem> createFX(ClientLevel world, String fx, double x, double y, double z, double motionX, double motionY, double motionZ) {
+	public static List<SAParticleSystem> createFX(ClientWorld world, String fx, double x, double y, double z, double motionX, double motionY, double motionZ) {
 		if (FXList.containsKey(fx.toLowerCase())) {
 			SAFXType fxtype = FXList.get(fx.toLowerCase());
 			List<SAParticleSystem> list = fxtype.createParticleSystems(world, x, y, z, motionX, motionY, motionZ);
 			return list;
 		}else {
 			SALogger.logger_client.warning("FX '"+fx+"' not found!");
-			////System.out.println("FX '"+fx+"' not found!");
+			//System.out.println("FX '"+fx+"' not found!");
 			return null;
 		}
 	}
@@ -57,7 +57,7 @@ public class SAFX {
 		}
 	}
 	
-	public static List<SAParticleSystem> createFXOnParticle(ClientLevel worldIn, SAParticle ent, String fx) {
+	public static List<SAParticleSystem> createFXOnParticle(ClientWorld worldIn, SAParticle ent, String fx) {
 
 		if (FXList.containsKey(fx.toLowerCase())) {
 			SAFXType fxtype = FXList.get(fx.toLowerCase());
@@ -132,19 +132,19 @@ public class SAFX {
 								value = sc.next();
 								switch (value.toUpperCase().trim()) {
 								case "ADDITIVE":
-									type.renderType = RenderTypeSA.ADDITIVE;
+									type.renderType = RenderType.ADDITIVE;
 									break;
 								case "ALPHA":
-									type.renderType = RenderTypeSA.ALPHA;
+									type.renderType = RenderType.ALPHA;
 									break;
 								case "ALPHA_SHADED":
-									type.renderType = RenderTypeSA.ALPHA_SHADED;
+									type.renderType = RenderType.ALPHA_SHADED;
 									break;
 								case "SOLID":
-									type.renderType = RenderTypeSA.SOLID;
+									type.renderType = RenderType.SOLID;
 									break;
 								case "NO_Z_TEST":
-									type.renderType = RenderTypeSA.NO_Z_TEST;
+									type.renderType = RenderType.NO_Z_TEST;
 									break;
 								default:
 									error = name;
@@ -153,7 +153,7 @@ public class SAFX {
 								break;
 							case "texture":
 								value = sc.next();
-								type.texture = ResourceLocation.tryParse(value);
+								type.texture = new ResourceLocation(value);
 								break;
 							case "rows":
 								type.rows = sc.nextInt();
@@ -327,7 +327,7 @@ public class SAFX {
 								float x = sc.nextFloat();
 								float y = sc.nextFloat();
 								float z = sc.nextFloat();
-								type.offset = new Vec3(x, y, z);
+								type.offset = new Vector3d(x, y, z);
 								break;
 							case "particlesmovewithsystem":
 								type.particlesMoveWithSystem = sc.nextBoolean();
@@ -346,7 +346,7 @@ public class SAFX {
 								break;
 							case "}":
 								end = true;
-								////System.out.println("Successfully parsed ParticleSystem "+name);
+								//System.out.println("Successfully parsed ParticleSystem "+name);
 								break;
 						}
 						
@@ -355,7 +355,7 @@ public class SAFX {
 				if (error.equals("")) {
 					count++;
 					FXList.put(name.toLowerCase(), type);
-					////System.out.println("Parsed ParticleSystem" +name+" in file '"+filename+"'.");
+					//System.out.println("Parsed ParticleSystem" +name+" in file '"+filename+"'.");
 				}else{
 					System.err.println("Error(s) while parsing particle "+name+" in file '"+filename+"'.");
 					System.err.println("error");
@@ -372,7 +372,7 @@ public class SAFX {
 		}
 
 		sc.close();
-		////System.out.println("Successfully parsed file "+ filename+ ". " +count + " ParticleSystems loaded.");
+		//System.out.println("Successfully parsed file "+ filename+ ". " +count + " ParticleSystems loaded.");
 		return true;
 
 	}
@@ -386,7 +386,7 @@ public class SAFX {
 //				if (e instanceof EntityFX) {
 //					e.setDead();
 //					Minecraft.getInstance().theWorld.removeEntity(e);
-//					//System.out.println("Removed FX entity.");
+//					System.out.println("Removed FX entity.");
 //				}
 //			}catch (Exception e) {
 //			}

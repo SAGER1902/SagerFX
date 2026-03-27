@@ -3,9 +3,9 @@ package safx.client.particle;
 import java.util.Iterator;
 import java.util.List;
 
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.HumanoidArm;
-import net.minecraft.world.InteractionHand;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.HandSide;
+import net.minecraft.util.Hand;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -76,8 +76,8 @@ public interface ISAParticleAttachments {
 		}
 	}
 	
-	public default void clearAttachedSystemsHand(InteractionHand hand) {
-		if(hand==InteractionHand.MAIN_HAND) {
+	public default void clearAttachedSystemsHand(Hand hand) {
+		if(hand==Hand.MAIN_HAND) {
 			if (this.getParticleSysMainhand()!=null) {
 				this.getParticleSysMainhand().clear();
 			}
@@ -88,9 +88,9 @@ public interface ISAParticleAttachments {
 		}
 	}
 	
-	public default void addSystemsHand(InteractionHand hand, List<SAParticleSystem> systems) {
+	public default void addSystemsHand(Hand hand, List<SAParticleSystem> systems) {
 		
-		if(hand==InteractionHand.MAIN_HAND) {
+		if(hand==Hand.MAIN_HAND) {
 			this.getOrInitParticleSysMainhand().clear();
 			this.getParticleSysMainhand().addAll(systems);
 		} else {
@@ -99,9 +99,9 @@ public interface ISAParticleAttachments {
 		}
 	}
 	
-	public default void addEffectHand(InteractionHand hand, List<ISAParticle> effects) {
+	public default void addEffectHand(Hand hand, List<ISAParticle> effects) {
 		
-		if(hand==InteractionHand.MAIN_HAND) {
+		if(hand==Hand.MAIN_HAND) {
 			this.getOrInitEntityParticlesMH().addAll(effects);
 		} else {
 			this.getOrInitEntityParticlesOH().addAll(effects);

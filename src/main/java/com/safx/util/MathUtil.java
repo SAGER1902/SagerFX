@@ -1,10 +1,11 @@
 package safx.util;
 
 import java.util.Random;
-import net.minecraft.world.entity.Entity;
-//import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.phys.Vec2;
-import net.minecraft.world.phys.Vec3;
+
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Vector2f;
+import net.minecraft.util.math.vector.Vector3d;
 import safx.client.ClientProxy;
 
 public class MathUtil {
@@ -18,7 +19,7 @@ public class MathUtil {
 	 * @return
 	 */
     public static float sin360(float arg){
-    	return (float)Math.sin(arg / 180.0F * (float)Math.PI);
+    	return MathHelper.sin(arg / 180.0F * (float)Math.PI);
     }
     /**
 	 * cos with argument in degrees (0-360)
@@ -26,14 +27,14 @@ public class MathUtil {
 	 * @return
 	 */
     public static float cos360(float arg){
-    	return (float)Math.cos(arg / 180.0F * (float)Math.PI);
+    	return MathHelper.cos(arg / 180.0F * (float)Math.PI);
     }
 	
-	public static Vec2 polarOffsetXZ(float x, float z, float radius, float angle) {
-    	x = (float) (x + (radius*Math.cos(angle)));
-    	z = (float) (z + (radius*Math.sin(angle)));
+	public static Vector2f polarOffsetXZ(float x, float z, float radius, float angle) {
+    	x = (float) (x + (radius*MathHelper.cos(angle)));
+    	z = (float) (z + (radius*MathHelper.sin(angle)));
 
-    	return new Vec2(x, z);
+    	return new Vector2f(x, z);
     }
 	
 	public static float clamp(float value, float min, float max) {
@@ -77,25 +78,25 @@ public class MathUtil {
     	return min+(rand.nextFloat()*(max-min));
     }
     
-    public static Vec3 getInterpolatedEntityPos(Entity entityIn) {
+    public static Vector3d getInterpolatedEntityPos(Entity entityIn) {
     	double partialTicks = (double)ClientProxy.get().PARTIAL_TICK_TIME;
         double d0 = entityIn.xOld + (entityIn.getX() - entityIn.xOld) * partialTicks;
         double d1 = entityIn.yOld + (entityIn.getY() - entityIn.yOld) * partialTicks;
         double d2 = entityIn.zOld + (entityIn.getZ() - entityIn.zOld) * partialTicks;
-        return new Vec3(d0,d1,d2);
+        return new Vector3d(d0,d1,d2);
     }
     
     /**
-     * X and Y methods are Vec3.rotatePitch and Vec3.rotateYaw
+     * X and Y methods are Vector3d.rotatePitch and Vector3d.rotateYaw
      * @return
      */
-    public static Vec3 rotateVec3dAroundZ(Vec3 vec, float angle) {
-        float f1 = (float)Math.cos(angle);
-        float f2 = (float)Math.sin(angle);
+    public static Vector3d rotateVec3dAroundZ(Vector3d vec, float angle) {
+        float f1 = MathHelper.cos(angle);
+        float f2 = MathHelper.sin(angle);
         double d0 = vec.x * (double)f1 + vec.y * (double)f2;
         double d1 = vec.y * (double)f1 - vec.x * (double)f2;
         double d2 = vec.z;
-        return new Vec3(d0,d1,d2);
+        return new Vector3d(d0,d1,d2);
     }
     
     /**
@@ -152,7 +153,7 @@ public class MathUtil {
     
     
     /**
-     * Returns a rotation angle that is inbetween two other rotation angles. par1 and par2 are the angles between which
+     * Returns a turretYaw angle that is inbetween two other turretYaw angles. par1 and par2 are the angles between which
      * to interpolate, par3 is probably a float between 0.0 and 1.0 that tells us where "between" the two angles we are.
      * Example: par1 = 30, par2 = 50, par3 = 0.5, then return = 40
      */
@@ -283,7 +284,7 @@ public class MathUtil {
     	}
     }
     
-    public static Vec3 rotateVector(Vec3 vec, Vec3 axis, double theta) {
+    public static Vector3d rotateVector(Vector3d vec, Vector3d axis, double theta) {
     	double u = axis.x;
     	double v = axis.y;
     	double w = axis.z;
@@ -297,7 +298,7 @@ public class MathUtil {
 		double zPrime = w*(u*vec.x + v*vec.y + w*vec.z)*(1d - Math.cos(theta))
 		                + vec.z*Math.cos(theta)
 		                + (-v*vec.x + u*vec.y)*Math.sin(theta);
-		return new Vec3(xPrime, yPrime, zPrime);
+		return new Vector3d(xPrime, yPrime, zPrime);
     }
 	public static boolean inRange(int val, int min, int max) {
 		return val>=min && val <=max;

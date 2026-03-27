@@ -3,9 +3,9 @@ package safx.client.particle;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Level;
-import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.entity.Entity;
+import net.minecraft.world.World;
+import net.minecraft.client.world.ClientWorld;
 public class SAParticleListType extends SAFXType {
 	ArrayList<ParticleSystemEntry> particleSystems = new ArrayList<ParticleSystemEntry>();
 
@@ -32,7 +32,7 @@ public class SAParticleListType extends SAFXType {
 
 	
 	@Override
-	public List<SAParticleSystem> createParticleSystems(ClientLevel world, double x, double y, double z, double motionX, double motionY, double motionZ) {
+	public List<SAParticleSystem> createParticleSystems(ClientWorld world, double x, double y, double z, double motionX, double motionY, double motionZ) {
 		ArrayList<SAParticleSystem> list = new ArrayList<SAParticleSystem>();
 		for (ParticleSystemEntry system : particleSystems) {		
 			if (SAFX.FXList.containsKey(system.particleSystem)) {
@@ -56,7 +56,7 @@ public class SAParticleListType extends SAFXType {
 	}
 
 	@Override
-	public List<SAParticleSystem> createParticleSystemsOnParticle(ClientLevel worldIn, SAParticle ent) {
+	public List<SAParticleSystem> createParticleSystemsOnParticle(ClientWorld worldIn, SAParticle ent) {
 		ArrayList<SAParticleSystem> list = new ArrayList<SAParticleSystem>();
 		for (ParticleSystemEntry system : particleSystems) {		
 			if (SAFX.FXList.containsKey(system.particleSystem)) {

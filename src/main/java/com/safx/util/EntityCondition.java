@@ -1,7 +1,7 @@
 package safx.util;
 
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraftforge.fml.ModList;
 import wmlib.common.living.EntityWMVehicleBase;
 /**
@@ -28,8 +28,8 @@ public enum EntityCondition {
 	public boolean evaluate(Entity entity) {
 		switch (this) {
 		case CHARGING_WEAPON:
-			/*if (entity instanceof Player) {
-				SAExtendedPlayer txp = SAExtendedPlayer.get((Player)entity);
+			/*if (entity instanceof PlayerEntity) {
+				SAExtendedPlayer txp = SAExtendedPlayer.get((PlayerEntity)entity);
 				return txp.isChargingWeapon();
 			}*/
 			return false;
@@ -40,7 +40,7 @@ public enum EntityCondition {
 			if(ModList.get().isLoaded("wmlib")){
 				if(entity instanceof EntityWMVehicleBase){
 					EntityWMVehicleBase vehicle = (EntityWMVehicleBase)entity;
-					if(vehicle.onGround()||vehicle.getMovePitch()>1F||
+					if(vehicle.isOnGround()||vehicle.getMovePitch()>1F||
 					vehicle.getMovePitch()<0F&&vehicle.getMovePitch()>-0.001F||vehicle.movePower<6F){
 						return false;
 					}else{

@@ -1,26 +1,24 @@
 package safx.client.particle;
-import java.util.Random;
+
 import java.util.List;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleRenderType;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.level.Level;
+import net.minecraft.client.particle.IParticleRenderType;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import safx.client.ClientProxy;
 import safx.client.particle.SAParticleSystemType.DirResult;
 import safx.util.EntityCondition;
 import safx.util.MathUtil;
-import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.client.Minecraft;
-
-import net.minecraft.client.Camera;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
+import net.minecraft.client.renderer.ActiveRenderInfo;
 
 import wmlib.util.Vec3dr;
 import wmlib.common.living.EntityWMVehicleBase;
@@ -31,14 +29,14 @@ import wmlib.common.living.EntityWMVehicleBase;
 public class SAParticleSystem extends Particle implements ISAParticle {
 	
 	public SAParticleSystemType type;
-	protected final Random randomfx = new Random();
-	public final void render(VertexConsumer p_225606_1_, Camera p_225606_2_, float p_225606_3_) {
+	
+	public final void render(IVertexBuilder p_225606_1_, ActiveRenderInfo p_225606_2_, float p_225606_3_) {
 	}
 
-	public ParticleRenderType getRenderType() {
-	  return ParticleRenderType.NO_RENDER;
+	public IParticleRenderType getRenderType() {
+	  return IParticleRenderType.NO_RENDER;
 	}
-	//public abstract ParticleRenderType getRenderType();
+	//public abstract IParticleRenderType getRenderType();
 	
 	public EntityCondition condition = EntityCondition.NONE;
 	
@@ -73,12 +71,12 @@ public class SAParticleSystem extends Particle implements ISAParticle {
 	
 	Entity entity; //parent entity (if attached to an entity)
 	public boolean attachToHead = false;
-	public Vec3 entityOffset = null;
+	public Vector3d entityOffset = null;
 	SAParticle parent; //parent particle (if attached to a particle)
 	
 	protected boolean itemAttached=false;
 	
-	public SAParticleSystem(ClientLevel worldIn, SAParticleSystemType type, double xCoordIn, double yCoordIn, double zCoordIn, double xSpeedIn, double ySpeedIn, double zSpeedIn) {
+	public SAParticleSystem(ClientWorld worldIn, SAParticleSystemType type, double xCoordIn, double yCoordIn, double zCoordIn, double xSpeedIn, double ySpeedIn, double zSpeedIn) {
 		//super(worldIn, xCoordIn, yCoordIn, zCoordIn, 0.0D, 0.0D, 0.0D);
 		super(worldIn, xCoordIn + type.offset.x, yCoordIn+type.offset.y, zCoordIn+type.offset.z);
 		this.xd = xSpeedIn;
@@ -88,16 +86,16 @@ public class SAParticleSystem extends Particle implements ISAParticle {
 		this.init();
 	}
 	
-	public SAParticleSystem(/*ClientLevel worldIn, */Entity entity, SAParticleSystemType type) {
+	public SAParticleSystem(/*ClientWorld worldIn, */Entity entity, SAParticleSystemType type) {
 		this(/*Minecraft.level*/null, type, entity.getX(),entity.getY(),entity.getZ(),0,0,0);
 		this.entity = entity;
 	}
 		
 
-	public SAParticleSystem(ClientLevel worldIn, SAParticle part, SAParticleSystemType type) {
+	public SAParticleSystem(ClientWorld worldIn, SAParticle part, SAParticleSystemType type) {
 		this(worldIn, type, part.posX(), part.posY(), part.posZ(),0,0,0);
 		this.parent = part;
-		//////System.out.println("Spawn attached system : " + type.name);
+		////System.out.println("Spawn attached system : " + type.name);
 	}
 
 	public void renderParticle(BufferBuilder buffer, Entity entityIn, float partialTicks, float rotationX, float rotationZ, float rotationYZ, float rotationXY, float rotationXZ) {
@@ -105,17 +103,17 @@ public class SAParticleSystem extends Particle implements ISAParticle {
 	}
 	
 	protected void init() {
-		this.systemLifetime = MathUtil.randomInt(this.randomfx, type.systemLifetimeMin, type.systemLifetimeMax);
-		this.initialDelay = MathUtil.randomInt(this.randomfx, type.initialDelayMin, type.initialDelayMax);
-		this.startSizeRate = MathUtil.randomFloat(this.randomfx, type.startSizeRateMin, type.startSizeRateMax) * this.scale;
-		this.startSizeRateDamping = MathUtil.randomFloat(this.randomfx, type.startSizeRateDampingMin, type.startSizeRateDampingMax);
+		this.systemLifetime = MathUtil.randomInt(this.random, type.systemLifetimeMin, type.systemLifetimeMax);
+		this.initialDelay = MathUtil.randomInt(this.random, type.initialDelayMin, type.initialDelayMax);
+		this.startSizeRate = MathUtil.randomFloat(this.random, type.startSizeRateMin, type.startSizeRateMax) * this.scale;
+		this.startSizeRateDamping = MathUtil.randomFloat(this.random, type.startSizeRateDampingMin, type.startSizeRateDampingMax);
 		//Minecraft.getInstance().effectRenderer.addEffect(this);
 		//timediff = System.currentTimeMillis();
 	}
 	
 	public void onUpdate() {	
 //		if (this.ticksExisted == 0) {
-//			////System.out.println("Timediff: "+(System.currentTimeMillis()-timediff));
+//			//System.out.println("Timediff: "+(System.currentTimeMillis()-timediff));
 //		}
 		this.prevRotationPitch = this.xRot;
 		this.prevRotationYaw = this.yRot;
@@ -137,7 +135,7 @@ public class SAParticleSystem extends Particle implements ISAParticle {
 			
 			if (this.attachToHead && entity instanceof LivingEntity) {
 				LivingEntity elb = (LivingEntity) entity;
-				this.xRot=elb.getXRot();
+				this.xRot=elb.xRot;
 				this.yRot=elb.yHeadRot;
 				Vec3dr offsetr = type.offsetr;
 				if (this.entityOffset != null) offsetr = offsetr.add1(this.entityOffset);
@@ -145,21 +143,21 @@ public class SAParticleSystem extends Particle implements ISAParticle {
 					EntityWMVehicleBase plane = (EntityWMVehicleBase)entity;
 					offsetr = offsetr.rotateRote((float) ((-plane.flyRoll)*MathUtil.D2R));	
 				}
-				offsetr = offsetr.rotatePitch((float) (-elb.getXRot()*MathUtil.D2R));
-				offsetr = offsetr.rotateYaw((float) ((-elb.getYRot())*MathUtil.D2R));		
+				offsetr = offsetr.rotatePitch((float) (-elb.xRot*MathUtil.D2R));
+				offsetr = offsetr.rotateYaw((float) ((-elb.yRot)*MathUtil.D2R));		
 				
 				this.x = elb.xo + offsetr.x;
 				this.y = elb.yo + elb.getEyeHeight() + offsetr.y;
 				this.z = elb.zo + offsetr.z;
 			}else {
-				this.xRot=entity.getXRot();
-				this.yRot=entity.getYRot();
+				this.xRot=entity.xRot;
+				this.yRot=entity.yRot;
 						
-				Vec3 offset = type.offset;
+				Vector3d offset = type.offset;
 				if (this.entityOffset != null) offset = offset.add(this.entityOffset);
 				
-				offset = offset.xRot((float) (-entity.getXRot()*MathUtil.D2R));
-				offset = offset.yRot((float) ((-entity.getYRot())*MathUtil.D2R));		
+				offset = offset.xRot((float) (-entity.xRot*MathUtil.D2R));
+				offset = offset.yRot((float) ((-entity.yRot)*MathUtil.D2R));		
 				
 				this.x = entity.xo + offset.x;
 				this.y = entity.yo + offset.y;
@@ -188,28 +186,27 @@ public class SAParticleSystem extends Particle implements ISAParticle {
 		
 		
 		if (spawnDelay-- <= 0) {
-			int count = MathUtil.randomInt(randomfx, type.particleCountMin, type.particleCountMax);
+			int count = MathUtil.randomInt(random, type.particleCountMin, type.particleCountMax);
 
 			for (int i = 0; i < count; i++) {
 				//Get position and motion data
 				DirResult dir = this.type.new DirResult();
-				Vec3 position = type.volumeType.getPosition(this, dir, i, count);
+				Vector3d position = type.volumeType.getPosition(this, dir, i, count);
 				//System.out.printf("Dir: %.3f,  %.3f,  %.3f\n", dir[0], dir[1], dir[2]);
 				//position = position.addVector(type.offset.x, type.offset.y, type.offset.z);
-				Vec3 motion = type.velocityType.getVelocity(this, dir.values);
+				Vector3d motion = type.velocityType.getVelocity(this, dir.values);
 				if(this.scale>1){
 					motion = motion.scale(0.9F+this.scale*0.1F);
 				}else{
 					motion = motion.scale(this.scale);
 				}
-				
 				position = position.scale(this.scale);
 				
-				//apply ParticleSystem's entity rotation
+				//apply ParticleSystem's entity turretYaw
 				
-				//////System.out.println("ParticleSystemRotation - Pitch: "+this.xRot+" - Yaw: "+this.yRot);
+				////System.out.println("ParticleSystemRotation - Pitch: "+this.xRot+" - Yaw: "+this.yRot);
 				
-				//////System.out.println(String.format("Entity pitch : %.3f,  yaw : %.3f", this.xRot, this.yRot));				
+				////System.out.println(String.format("Entity pitch : %.3f,  yaw : %.3f", this.xRot, this.yRot));				
 				
 				motion = motion.xRot((float) (-this.xRot*MathUtil.D2R));
 				motion = motion.yRot((float) ((-this.yRot)*MathUtil.D2R));
@@ -217,8 +214,8 @@ public class SAParticleSystem extends Particle implements ISAParticle {
 					position = position.xRot((float) (-this.xRot*MathUtil.D2R));
 					position = position.yRot((float) ((-this.yRot)*MathUtil.D2R));		
 				}
-				//////System.out.println("Motion: ("+motion.x+ ", "+motion.y + ", "+ motion.z+")");
-				//////System.out.println("Position: ("+position.x+ ", "+position.y + ", "+ position.z+")");
+				////System.out.println("Motion: ("+motion.x+ ", "+motion.y + ", "+ motion.z+")");
+				////System.out.println("Position: ("+position.x+ ", "+position.y + ", "+ position.z+")");
 				
 				//Spawn particle
 				double mf = 0.05D; //Per Second instead of Per Tick
@@ -250,11 +247,11 @@ public class SAParticleSystem extends Particle implements ISAParticle {
 					}
 				}
 			}			
-			spawnDelay = MathUtil.randomInt(this.randomfx, type.spawnDelayMin, type.spawnDelayMax);
+			spawnDelay = MathUtil.randomInt(this.random, type.spawnDelayMin, type.spawnDelayMax);
 		}
 		
 		if (this.entity!=null){
-			if (this.entity.isRemoved()){
+			if (this.entity.removed){
 				this.remove();
 			} else if ( this.systemLifetime>0 && ticksExisted>= this.systemLifetime){
 				this.remove();
@@ -312,13 +309,15 @@ public class SAParticleSystem extends Particle implements ISAParticle {
 	}
 
 	@Override
-	public Vec3 getPos() {
-		return new Vec3(this.getX(), this.getY(), this.getZ());
+	public Vector3d getPos() {
+		return new Vector3d(this.getX(), this.getY(), this.getZ());
 	}
 
 	@Override
 	public boolean shouldRemove() {
-		return !this.isAlive();
+		String[] parts = Minecraft.getInstance().fpsString.split(" ");
+        int fps = Integer.parseInt(parts[0]);
+		return !this.isAlive()||fps<5;
 	}
 
 	@Override
@@ -333,10 +332,10 @@ public class SAParticleSystem extends Particle implements ISAParticle {
 	}
 
 	@Override
-	public AABB getRenderBoundingBox(float partialTickTime, Entity viewEntity) {
+	public AxisAlignedBB getRenderBoundingBox(float partialTickTime, Entity viewEntity) {
 		//DOESN'T MATTER, SYSTEM DOES NOT RENDER STUFF ANYWAY
 	    float s = 0.5f; 
-		return new AABB(this.getX()-s, this.getY()-s, this.getZ()-s, this.getX()+s, this.getY()+s, this.getZ()+s);
+		return new AxisAlignedBB(this.getX()-s, this.getY()-s, this.getZ()-s, this.getX()+s, this.getY()+s, this.getZ()+s);
 	}
 
 	@Override
