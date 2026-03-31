@@ -1,14 +1,20 @@
 package safx.client.particle;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
+//需要mwf 不用请注释
+import com.modularwarfare.ModularWarfare;
+import com.modularwarfare.utility.ZipContentPack;
 
+import moe.komi.mwprotect.IZipEntry;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -88,11 +94,63 @@ public class SAFX {
 				loadFXListFile(FXLIST_DIR+filename);
 			}
 		}
+		//需要mwf 不用请注释
+		loadFXFromContentPacks();
+	}
+    //需要mwf 不用请注释
+	public static void loadFXFromContentPacks() {
+		java.util.Set<String> beforeKeys = new java.util.HashSet<>(FXList.keySet());
+		
+		if (ModularWarfare.contentPacks != null) {
+			for (File pack : ModularWarfare.contentPacks) {
+				if (pack.isDirectory()) {
+					File particleDir = new File(pack, "assets/safx/particles/");
+					if (particleDir.exists() && particleDir.isDirectory()) {
+						File[] files = particleDir.listFiles((dir, name) -> name.endsWith(".txt"));
+						if (files != null) {
+							for (File file : files) {
+								try {
+									loadFXListFromStream(new FileInputStream(file), file.getName());
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+						}
+					}
+				} else if (ModularWarfare.zipContentsPack.containsKey(pack.getName())) {
+					ZipContentPack zipPack = ModularWarfare.zipContentsPack.get(pack.getName());
+					for (IZipEntry entry : zipPack.fileHeaders) {
+						String name = entry.getFileName();
+						if (name.startsWith("assets/safx/particles/") && name.endsWith(".txt")) {
+							try {
+								loadFXListFromStream(entry.getInputStream(), name);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		java.util.Set<String> afterKeys = new java.util.HashSet<>(FXList.keySet());
+		afterKeys.removeAll(beforeKeys);
+		
+		if (!afterKeys.isEmpty()) {
+			SALogger.logger_client.info("Loaded " + afterKeys.size() + " effects from content packs: " + afterKeys);
+		} else {
+			SALogger.logger_client.info("No new effects loaded from content packs.");
+		}
 	}
 
 	public static boolean loadFXListFile(String filename) {
-		//BufferedReader br = new BufferedReader(new InputStreamReader(FXList.class.getResourceAsStream(filename)));
-		Scanner sc = new Scanner(SAFX.class.getResourceAsStream(filename));
+		InputStream stream = SAFX.class.getResourceAsStream(filename);
+		if (stream == null) return false;
+		return loadFXListFromStream(stream, filename);
+	}
+
+	public static boolean loadFXListFromStream(InputStream stream, String filename) {
+		Scanner sc = new Scanner(stream);
 		sc.useLocale(Locale.ENGLISH);
 		sc.useDelimiter("(\\s*=\\s*)|\\s\\{|\\s*//.*|\\r\\n|\\s+"); //|^\\s*$		
 		String error = "";
@@ -349,6 +407,36 @@ public class SAFX {
 								break;
 							case "groundaligned":
 								type.groundAligned = sc.nextBoolean();
+								break;
+							case "surfacealigned":
+								type.surfaceAligned = sc.nextBoolean();
+								break;
+							case "surfacealignmode":
+								type.surfaceAlignMode = sc.next().toUpperCase(Locale.ENGLISH);
+								break;
+							case "surfacenormalvelocityfactor":
+								type.surfaceNormalVelocityFactor = sc.nextFloat();
+								break;
+							case "blockhitaffect":
+								type.blockHitAffect = sc.nextBoolean();
+								break;
+							case "blockhitspawnfx":
+								type.blockHitSpawnFx = sc.next();
+								break;
+							case "blockhitspawnonce":
+								type.blockHitSpawnOnce = sc.nextBoolean();
+								break;
+							case "blockhitkillself":
+								type.blockHitKillSelf = sc.nextBoolean();
+								break;
+							case "blockhitmaxspawncount":
+								type.blockHitMaxSpawnCount = Math.max(0, sc.nextInt());
+								break;
+							case "blockhitspawncooldownticks":
+								type.blockHitSpawnCooldownTicks = Math.max(0, sc.nextInt());
+								break;
+							case "blockhitchainbudget":
+								type.blockHitChainBudget = Math.max(0, sc.nextInt());
 								break;
 							case "streak":
 								type.streak = sc.nextBoolean();

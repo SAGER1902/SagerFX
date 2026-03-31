@@ -60,8 +60,17 @@ public class SAParticleSystem extends Particle implements ISAParticle {
 	public boolean attachToHead = false;
 	public Vec3d entityOffset = null;
 	SAParticle parent; //parent particle (if attached to a particle)
+	Vec3d surfaceNormal = null;
+	int inheritedBlockHitChainBudget = -1;
+	
+	String obbBoxName = null;
+	long obbDuration = 0;
+	long obbStartTime = 0;
 	
 	protected boolean itemAttached=false;
+	
+	public boolean enableSmoothing = false;
+	public int smoothingSubdivisions = 3;
 	
 	public SAParticleSystem(World worldIn, SAParticleSystemType type, double xCoordIn, double yCoordIn, double zCoordIn, double xSpeedIn, double ySpeedIn, double zSpeedIn) {
 		//super(worldIn, xCoordIn, yCoordIn, zCoordIn, 0.0D, 0.0D, 0.0D);
@@ -94,8 +103,28 @@ public class SAParticleSystem extends Particle implements ISAParticle {
 		this.initialDelay = MathUtil.randomInt(this.rand, type.initialDelayMin, type.initialDelayMax);
 		this.startSizeRate = MathUtil.randomFloat(this.rand, type.startSizeRateMin, type.startSizeRateMax) * this.scale;
 		this.startSizeRateDamping = MathUtil.randomFloat(this.rand, type.startSizeRateDampingMin, type.startSizeRateDampingMax);
-		//Minecraft.getMinecraft().effectRenderer.addEffect(this);
-		//timediff = System.currentTimeMillis();
+	}
+	
+	public void bindToOBBBox(String boxName, long duration) {
+		this.obbBoxName = boxName;
+		this.obbDuration = duration;
+		this.obbStartTime = System.currentTimeMillis();
+	}
+	
+	public void setSurfaceNormal(Vec3d normal) {
+		this.surfaceNormal = normal;
+	}
+	
+	public Vec3d getSurfaceNormal() {
+		return this.surfaceNormal;
+	}
+	
+	public void setInheritedBlockHitChainBudget(int budget) {
+		this.inheritedBlockHitChainBudget = budget;
+	}
+	
+	public int getInheritedBlockHitChainBudget() {
+		return this.inheritedBlockHitChainBudget;
 	}
 	public void onUpdate() {	
 //		if (this.ticksExisted == 0) {
@@ -118,7 +147,65 @@ public class SAParticleSystem extends Particle implements ISAParticle {
 	    		this.setExpired();
 	    		return;
 	    	}
-			if (this.attachToHead && entity instanceof EntityLivingBase) {
+	    	
+	    	if (this.obbBoxName != null) {
+	    		if (this.obbDuration > 0 && System.currentTimeMillis() - this.obbStartTime >= this.obbDuration) {
+	    			this.setExpired();
+	    			return;
+	    		}
+	    		
+	    		com.modularwarfare.utility.raycast.obb.OBBModelObject obbObject = null;
+	    		if (entity instanceof net.minecraft.entity.player.EntityPlayer) {
+	    			obbObject = com.modularwarfare.utility.raycast.obb.EntityOBBManager.getEntityOBB(entity.getUniqueID());
+	    			if (obbObject == null) {
+	    				obbObject = com.modularwarfare.utility.raycast.obb.OBBPlayerManager.getPlayerOBBObject(entity.getName());
+	    			}
+	    		} else {
+	    			obbObject = com.modularwarfare.utility.raycast.obb.EntityOBBManager.getEntityOBB(entity.getUniqueID());
+	    		}
+	    		
+	    		if (obbObject != null) {
+	    			com.modularwarfare.utility.raycast.obb.OBBModelBox targetBox = null;
+	    			for (com.modularwarfare.utility.raycast.obb.OBBModelBox box : obbObject.boxes) {
+	    				if (box.name.equals(this.obbBoxName)) {
+	    					targetBox = box;
+	    					break;
+	    				}
+	    			}
+	    			
+	    			if (targetBox != null) {
+	    				this.posX = targetBox.center.x;
+	    				this.posY = targetBox.center.y;
+	    				this.posZ = targetBox.center.z;
+	    				this.rotationPitch = 0;
+	    				this.rotationYaw = 0;
+	    			} else {
+	    				Vec3d offset = type.offset;
+	    				if (this.entityOffset != null) offset = offset.add(this.entityOffset);
+	    				
+	    				offset = offset.rotatePitch((float) (-entity.rotationPitch*MathUtil.D2R));
+	    				offset = offset.rotateYaw((float) ((-entity.rotationYaw)*MathUtil.D2R));		
+	    				
+	    				this.posX = entity.prevPosX + offset.x;
+	    				this.posY = entity.prevPosY + offset.y;
+	    				this.posZ = entity.prevPosZ + offset.z;
+	    				this.rotationPitch=entity.rotationPitch;
+	    				this.rotationYaw=entity.rotationYaw;
+	    			}
+	    		} else {
+	    			Vec3d offset = type.offset;
+	    			if (this.entityOffset != null) offset = offset.add(this.entityOffset);
+	    			
+	    			offset = offset.rotatePitch((float) (-entity.rotationPitch*MathUtil.D2R));
+	    			offset = offset.rotateYaw((float) ((-entity.rotationYaw)*MathUtil.D2R));		
+	    			
+	    			this.posX = entity.prevPosX + offset.x;
+	    			this.posY = entity.prevPosY + offset.y;
+	    			this.posZ = entity.prevPosZ + offset.z;
+	    			this.rotationPitch=entity.rotationPitch;
+	    			this.rotationYaw=entity.rotationYaw;
+	    		}
+	    	} else if (this.attachToHead && entity instanceof EntityLivingBase) {
 				EntityLivingBase elb = (EntityLivingBase) entity;
 				this.rotationPitch=elb.rotationPitch;
 				this.rotationYaw=elb.rotationYawHead;
@@ -198,6 +285,8 @@ public class SAParticleSystem extends Particle implements ISAParticle {
 				SAParticle particle=null;
 				if (this.type.streak) {
 					SAParticleStreak particleStreak = new SAParticleStreak(this.world, this.posX+position.x, this.posY+position.y, this.posZ+position.z, motion.x*mf, motion.y*mf, motion.z*mf, this);
+					particleStreak.enableSmoothing = this.enableSmoothing;
+					particleStreak.smoothingSubdivisions = this.smoothingSubdivisions;
 					if (prevParticle != null) {
 						particleStreak.setPrev(prevParticle);
 						prevParticle.setNext(particleStreak);
